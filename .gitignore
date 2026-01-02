@@ -37,6 +37,7 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+app_backup/
 
 # generated native folders
 /ios
