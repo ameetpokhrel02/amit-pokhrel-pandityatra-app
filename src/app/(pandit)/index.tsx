@@ -12,11 +12,14 @@ export default function PanditDashboardScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Namaste, Pt. Sharma</Text>
-          <Text style={styles.subGreeting}>Here is your daily overview</Text>
+          <Text style={styles.greeting}>Namaste, Ramesh Ji!</Text>
+          <View style={styles.verifiedBadge}>
+            <Ionicons name="checkmark-circle" size={16} color={Colors.light.primary} />
+            <Text style={styles.verifiedText}>Verified Pandit</Text>
+          </View>
         </View>
         <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/(pandit)/profile')}>
-          <Ionicons name="person-circle-outline" size={40} color={Colors.light.primary} />
+          <Ionicons name="person-circle-outline" size={50} color={Colors.light.primary} />
         </TouchableOpacity>
       </View>
 
@@ -25,23 +28,67 @@ export default function PanditDashboardScreen() {
         <StatCard label="Pending" value="3" icon="time-outline" color="#F59E0B" />
         <StatCard label="Upcoming" value="5" icon="calendar-outline" color="#3B82F6" />
         <StatCard label="Earnings" value="₹12k" icon="wallet-outline" color="#10B981" />
-        <StatCard label="Rating" value="4.9" icon="star-outline" color="#FBBF24" />
+        <StatCard label="Reviews" value="4.9" icon="star-outline" color="#FBBF24" />
       </View>
 
-      {/* Action Buttons */}
-      <View style={styles.actionsContainer}>
+      {/* Upcoming Pujas */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Upcoming Pujas</Text>
+          <TouchableOpacity onPress={() => router.push('/(pandit)/bookings')}>
+            <Text style={styles.seeAll}>View All</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.verticalList}>
+          <UpcomingPujaCard 
+            customerName="Anita Sharma" 
+            pujaType="Satyanarayan Puja" 
+            date="15 Jan, 10:00 AM" 
+            status="Confirmed" 
+          />
+          <UpcomingPujaCard 
+            customerName="Rajesh Verma" 
+            pujaType="Griha Pravesh" 
+            date="20 Jan, 08:00 AM" 
+            status="Pending" 
+          />
+        </View>
+      </View>
+
+      {/* Booking Actions */}
+      <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionGrid}>
-          <ActionButton label="Add Service" icon="add-circle-outline" onPress={() => {}} />
-          <ActionButton label="Update Calendar" icon="calendar-number-outline" onPress={() => router.push('/(pandit)/calendar')} />
-          <ActionButton label="View Bookings" icon="book-outline" onPress={() => router.push('/(pandit)/bookings')} />
-          <ActionButton label="Earnings Report" icon="bar-chart-outline" onPress={() => router.push('/(pandit)/earnings')} />
+          <ActionButton label="Accept/Decline" icon="checkmark-done-circle-outline" onPress={() => router.push('/(pandit)/bookings')} />
+          <ActionButton label="Message" icon="chatbubble-ellipses-outline" onPress={() => {}} />
+          <ActionButton label="Join Video Puja" icon="videocam-outline" onPress={() => {}} />
+          <ActionButton label="Update Calendar" icon="calendar-outline" onPress={() => router.push('/(pandit)/calendar')} />
+        </View>
+      </View>
+
+      {/* Services Management */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>My Services</Text>
+          <TouchableOpacity onPress={() => {}}>
+            <Text style={styles.seeAll}>Manage</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.serviceCard}>
+          <View style={styles.serviceInfo}>
+            <Text style={styles.serviceName}>Satyanarayan Puja</Text>
+            <Text style={styles.serviceDetails}>2 Hours • ₹2,100</Text>
+          </View>
+          <TouchableOpacity style={styles.editButton}>
+            <Ionicons name="create-outline" size={20} color={Colors.light.primary} />
+          </TouchableOpacity>
         </View>
       </View>
 
       {/* Notifications / Alerts */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Alerts</Text>
+        <Text style={styles.sectionTitle}>Notifications</Text>
         <View style={styles.alertCard}>
           <View style={styles.alertIcon}>
             <Ionicons name="notifications" size={20} color="#EF4444" />
@@ -63,10 +110,30 @@ function StatCard({ label, value, icon, color }: { label: string, value: string,
   return (
     <View style={styles.statCard}>
       <View style={[styles.statIconContainer, { backgroundColor: `${color}20` }]}>
-        <Ionicons name={icon} size={24} color={color} />
+        <Ionicons name={icon} size={20} color={color} />
       </View>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function UpcomingPujaCard({ customerName, pujaType, date, status }: { customerName: string, pujaType: string, date: string, status: string }) {
+  return (
+    <View style={styles.upcomingCard}>
+      <View style={styles.upcomingContent}>
+        <Text style={styles.upcomingTitle}>{pujaType}</Text>
+        <Text style={styles.upcomingCustomer}>for {customerName}</Text>
+        <Text style={styles.upcomingDate}><Ionicons name="time-outline" size={12} /> {date}</Text>
+      </View>
+      <View style={styles.upcomingActions}>
+        <View style={[styles.statusBadge, { backgroundColor: status === 'Confirmed' ? '#DCFCE7' : '#FEF3C7' }]}>
+          <Text style={[styles.statusText, { color: status === 'Confirmed' ? '#166534' : '#92400E' }]}>{status}</Text>
+        </View>
+        <TouchableOpacity style={styles.viewButton}>
+          <Text style={styles.viewButtonText}>Details</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -75,7 +142,7 @@ function ActionButton({ label, icon, onPress }: { label: string, icon: any, onPr
   return (
     <TouchableOpacity style={styles.actionButton} onPress={onPress}>
       <View style={styles.actionButtonIcon}>
-        <Ionicons name={icon} size={28} color={Colors.light.primary} />
+        <Ionicons name={icon} size={24} color={Colors.light.primary} />
       </View>
       <Text style={styles.actionButtonLabel}>{label}</Text>
     </TouchableOpacity>
@@ -103,6 +170,17 @@ const styles = StyleSheet.create({
     color: '#333',
     fontFamily: 'Playfair Display',
   },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  verifiedText: {
+    fontSize: 14,
+    color: Colors.light.primary,
+    fontWeight: '600',
+  },
   subGreeting: {
     fontSize: 14,
     color: '#666',
@@ -117,8 +195,8 @@ const styles = StyleSheet.create({
   },
   statCard: {
     backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 12,
+    borderRadius: 12,
+    padding: 10,
     alignItems: 'center',
     width: '23%',
     elevation: 2,
@@ -128,15 +206,15 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   statIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   statValue: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#333',
   },
@@ -144,15 +222,79 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#666',
   },
-  actionsContainer: {
-    marginBottom: 32,
+  section: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 16,
     fontFamily: 'Playfair Display',
+  },
+  seeAll: {
+    color: Colors.light.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  verticalList: {
+    gap: 12,
+  },
+  upcomingCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 16,
+    elevation: 2,
+  },
+  upcomingContent: {
+    flex: 1,
+  },
+  upcomingTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  upcomingCustomer: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  upcomingDate: {
+    fontSize: 12,
+    color: '#999',
+  },
+  upcomingActions: {
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  viewButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+  },
+  viewButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
   },
   actionGrid: {
     flexDirection: 'row',
@@ -160,7 +302,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   actionButton: {
-    width: '47%', // Approx half width minus gap
+    width: '47%',
     backgroundColor: '#FFF',
     padding: 16,
     borderRadius: 16,
@@ -168,21 +310,46 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   actionButtonIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#FFF7ED',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
   actionButtonLabel: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: '#333',
+    textAlign: 'center',
   },
-  section: {
-    marginBottom: 20,
+  serviceCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 16,
+    elevation: 2,
+  },
+  serviceInfo: {
+    flex: 1,
+  },
+  serviceName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  serviceDetails: {
+    fontSize: 14,
+    color: '#666',
+  },
+  editButton: {
+    padding: 8,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
   },
   alertCard: {
     flexDirection: 'row',

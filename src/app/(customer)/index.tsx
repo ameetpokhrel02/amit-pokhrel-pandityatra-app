@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 
@@ -17,23 +16,18 @@ export default function CustomerHomeScreen() {
             <Text style={styles.greeting}>Namaste, Anita!</Text>
             <Text style={styles.subGreeting}>Find peace and blessings today</Text>
           </View>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Ionicons name="notifications-outline" size={24} color={Colors.light.primary} />
+          <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/(customer)/profile')}>
+            <Ionicons name="person-circle-outline" size={40} color={Colors.light.primary} />
           </TouchableOpacity>
         </View>
         
-        <View style={styles.banner}>
-          <View style={styles.bannerContent}>
-            <Text style={styles.bannerTitle}>Book a Pandit for your Puja</Text>
-            <Text style={styles.bannerSubtitle}>Verified Pandits • Authentic Rituals</Text>
-            <TouchableOpacity style={styles.bannerButton} onPress={() => router.push('/(customer)/pandits')}>
-              <Text style={styles.bannerButtonText}>Find a Pandit</Text>
-            </TouchableOpacity>
+        {/* Next Booking Reminder */}
+        <View style={styles.reminderCard}>
+          <View style={styles.reminderHeader}>
+            <Ionicons name="calendar" size={16} color="#FFF" />
+            <Text style={styles.reminderTitle}>Next Puja: Bratabandha</Text>
           </View>
-          {/* Placeholder for banner image */}
-          <View style={styles.bannerImagePlaceholder}>
-             <Ionicons name="flower-outline" size={60} color="rgba(255,255,255,0.5)" />
-          </View>
+          <Text style={styles.reminderTime}>15 Jan 2026, 10:00 AM</Text>
         </View>
       </View>
 
@@ -54,9 +48,36 @@ export default function CustomerHomeScreen() {
 
       {/* Quick Actions */}
       <View style={styles.quickActions}>
-        <QuickActionButton icon="add-circle-outline" label="Book Now" onPress={() => router.push('/(customer)/pandits')} />
-        <QuickActionButton icon="basket-outline" label="Shop Samagri" onPress={() => router.push('/(customer)/cart')} />
-        <QuickActionButton icon="planet-outline" label="Kundali" onPress={() => {}} />
+        <QuickActionButton icon="add-circle-outline" label="Book Puja" onPress={() => router.push('/(customer)/pandits')} />
+        <QuickActionButton icon="basket-outline" label="Shop Samagri" onPress={() => router.push('/(customer)/shop')} />
+        <QuickActionButton icon="planet-outline" label="Generate Kundali" onPress={() => {}} />
+      </View>
+
+      {/* Upcoming Bookings */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Upcoming Bookings</Text>
+          <TouchableOpacity onPress={() => router.push('/(customer)/bookings')}>
+            <Text style={styles.seeAll}>See All</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+          <BookingCard 
+            date="15 Jan" 
+            time="10:00 AM" 
+            panditName="Pt. Sharma" 
+            pujaType="Bratabandha" 
+            status="Confirmed" 
+          />
+          <BookingCard 
+            date="22 Jan" 
+            time="08:00 AM" 
+            panditName="Pt. Joshi" 
+            pujaType="Satyanarayan" 
+            status="Pending" 
+          />
+        </ScrollView>
       </View>
 
       {/* Featured Pandits */}
@@ -75,23 +96,16 @@ export default function CustomerHomeScreen() {
         </ScrollView>
       </View>
 
-      {/* Upcoming Bookings (Mock) */}
+      {/* Recent Purchases / Recommendations */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Upcoming Puja</Text>
-        <View style={styles.bookingCard}>
-          <View style={styles.bookingDate}>
-            <Text style={styles.bookingDay}>12</Text>
-            <Text style={styles.bookingMonth}>JAN</Text>
-          </View>
-          <View style={styles.bookingInfo}>
-            <Text style={styles.bookingTitle}>Satyanarayan Puja</Text>
-            <Text style={styles.bookingTime}>10:00 AM • Home</Text>
-          </View>
-          <TouchableOpacity style={styles.viewButton} onPress={() => router.push('/(customer)/bookings')}>
-            <Text style={styles.viewButtonText}>View</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.sectionTitle}>Recommended for You</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+          <ProductCard name="Puja Thali Set" price="₹1,200" />
+          <ProductCard name="Ghee Lamp" price="₹450" />
+          <ProductCard name="Incense Sticks" price="₹150" />
+        </ScrollView>
       </View>
+
     </ScrollView>
   );
 }
@@ -121,6 +135,40 @@ function PanditCard({ name, rating, location }: { name: string, rating: number, 
           <Text style={styles.ratingText}>{rating}</Text>
         </View>
       </View>
+    </View>
+  );
+}
+
+function BookingCard({ date, time, panditName, pujaType, status }: { date: string, time: string, panditName: string, pujaType: string, status: string }) {
+  return (
+    <View style={styles.bookingCard}>
+      <View style={styles.bookingHeader}>
+        <Text style={styles.bookingDate}>{date}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: status === 'Confirmed' ? '#DCFCE7' : '#FEF3C7' }]}>
+          <Text style={[styles.statusText, { color: status === 'Confirmed' ? '#166534' : '#92400E' }]}>{status}</Text>
+        </View>
+      </View>
+      <Text style={styles.bookingTitle}>{pujaType}</Text>
+      <Text style={styles.bookingPandit}>{panditName} <Ionicons name="checkmark-circle" size={12} color={Colors.light.primary} /></Text>
+      <Text style={styles.bookingTime}>{time}</Text>
+      <TouchableOpacity style={styles.viewDetailsButton}>
+        <Text style={styles.viewDetailsText}>View Details</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function ProductCard({ name, price }: { name: string, price: string }) {
+  return (
+    <View style={styles.productCard}>
+      <View style={styles.productImagePlaceholder}>
+        <Ionicons name="basket-outline" size={30} color="#ccc" />
+      </View>
+      <Text style={styles.productName}>{name}</Text>
+      <Text style={styles.productPrice}>{price}</Text>
+      <TouchableOpacity style={styles.addToCartButton}>
+        <Text style={styles.addToCartText}>Add</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -156,52 +204,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.text,
   },
-  notificationButton: {
-    padding: 8,
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    elevation: 2,
+  profileButton: {
+    padding: 4,
   },
-  banner: {
+  reminderCard: {
     backgroundColor: Colors.light.primary,
-    borderRadius: 20,
-    padding: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    borderRadius: 16,
+    padding: 16,
     elevation: 4,
   },
-  bannerContent: {
-    flex: 1,
-  },
-  bannerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
+  reminderHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 4,
   },
-  bannerSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.9)',
-    marginBottom: 12,
-  },
-  bannerButton: {
-    backgroundColor: '#FFF',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-  },
-  bannerButtonText: {
-    color: Colors.light.primary,
+  reminderTitle: {
+    color: '#FFF',
     fontWeight: 'bold',
-    fontSize: 12,
+    fontSize: 16,
   },
-  bannerImagePlaceholder: {
-    width: 80,
-    height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
+  reminderTime: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
   },
   searchSection: {
     flexDirection: 'row',
@@ -295,7 +320,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginRight: 16,
     elevation: 2,
-    marginBottom: 10, // For shadow
+    marginBottom: 10,
   },
   panditImagePlaceholder: {
     width: '100%',
@@ -329,32 +354,33 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   bookingCard: {
-    flexDirection: 'row',
+    width: 200,
     backgroundColor: '#FFF',
     borderRadius: 16,
     padding: 16,
-    alignItems: 'center',
+    marginRight: 16,
     elevation: 2,
+    marginBottom: 10,
+  },
+  bookingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   bookingDate: {
-    backgroundColor: '#FFF7ED',
-    padding: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  bookingDay: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
     color: Colors.light.primary,
   },
-  bookingMonth: {
-    fontSize: 12,
-    color: Colors.light.primary,
-    fontWeight: '600',
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
-  bookingInfo: {
-    flex: 1,
+  statusText: {
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   bookingTitle: {
     fontSize: 16,
@@ -362,19 +388,66 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 4,
   },
-  bookingTime: {
+  bookingPandit: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 4,
   },
-  viewButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+  bookingTime: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 12,
+  },
+  viewDetailsButton: {
     backgroundColor: '#F3F4F6',
-    borderRadius: 20,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignItems: 'center',
   },
-  viewButtonText: {
+  viewDetailsText: {
     fontSize: 12,
     fontWeight: '600',
     color: '#333',
+  },
+  productCard: {
+    width: 140,
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 12,
+    marginRight: 16,
+    elevation: 2,
+    marginBottom: 10,
+  },
+  productImagePlaceholder: {
+    width: '100%',
+    height: 80,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    marginBottom: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  productName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  productPrice: {
+    fontSize: 12,
+    color: Colors.light.primary,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  addToCartButton: {
+    backgroundColor: Colors.light.primary,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  addToCartText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
 });

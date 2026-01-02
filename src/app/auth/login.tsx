@@ -59,6 +59,12 @@ export default function LoginScreen() {
             autoCapitalize="none"
           />
 
+          <View style={styles.forgotPasswordContainer}>
+            <Text style={styles.forgotPasswordLink} onPress={() => router.push('/auth/forgot-password' as any)}>
+              Forgot Password?
+            </Text>
+          </View>
+
           <Button 
             title="Request OTP" 
             onPress={handleRequestOTP} 
@@ -100,19 +106,19 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 120,
+    height: 120,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.light.text,
+    color: Colors.light.primary,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#757575',
+    fontSize: 16,
+    color: Colors.light.text,
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -125,8 +131,17 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
   },
+  forgotPasswordContainer: {
+    alignItems: 'flex-end',
+    marginBottom: 16,
+  },
+  forgotPasswordLink: {
+    color: Colors.light.primary,
+    fontWeight: '600',
+    fontSize: 14,
+  },
   submitButton: {
-    marginTop: 12,
+    marginTop: 8,
   },
   footer: {
     flexDirection: 'row',
