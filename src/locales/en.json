@@ -1,0 +1,22 @@
+{
+  "welcome": "Namaste",
+  "greetingSubtitle": "Find peace and blessings today.",
+  "searchPlaceholder": "Search Pandit, Samagri, or Puja...",
+  "categories": {
+    "puja": "Puja",
+    "samagri": "Samagri",
+    "pandits": "Pandits",
+    "kundali": "Kundali"
+  },
+  "recommendedSamagri": "Recommended Samagri",
+  "seeAll": "See all",
+  "popularPandits": "Popular Pandits",
+  "bookNow": "Book Now",
+  "addToCart": "Add",
+  "profile": {
+    "title": "Profile",
+    "darkMode": "Dark Mode",
+    "language": "Language",
+    "logout": "Logout"
+  }
+}

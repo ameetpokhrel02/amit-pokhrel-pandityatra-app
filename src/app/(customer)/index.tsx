@@ -9,6 +9,7 @@ import { PRODUCTS } from '@/data/products';
 import { MotiView, MotiText } from 'moti';
 import { DailyPanchang } from '@/components/home/DailyPanchang';
 import { DailyQuote } from '@/components/home/DailyQuote';
+import { useTranslation } from 'react-i18next';
 
 // Get a few products for the recommended section
 const RECOMMENDED_PRODUCTS = PRODUCTS.slice(0, 5);
@@ -23,6 +24,7 @@ export default function CustomerHomeScreen() {
   const router = useRouter();
   const { addToCart, updateQuantity, getItemCount } = useCart();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
@@ -46,8 +48,8 @@ export default function CustomerHomeScreen() {
           transition={{ type: 'timing', duration: 500 }}
           style={styles.greetingSection}
         >
-          <Text style={styles.greetingTitle}>Namaste, {user?.name || 'Guest'}!</Text>
-          <Text style={styles.greetingSubtitle}>Find peace and blessings today.</Text>
+          <Text style={styles.greetingTitle}>{t('welcome')}, {user?.name || 'Guest'}!</Text>
+          <Text style={styles.greetingSubtitle}>{t('greetingSubtitle')}</Text>
         </MotiView>
 
         {/* Daily Panchang Widget */}
@@ -62,7 +64,7 @@ export default function CustomerHomeScreen() {
         >
           <Ionicons name="search-outline" size={20} color="#999" />
           <TextInput 
-            placeholder="Search Pandit, Samagri, or Puja..." 
+            placeholder={t('searchPlaceholder')} 
             style={styles.searchInput}
             placeholderTextColor="#999"
           />
@@ -73,10 +75,10 @@ export default function CustomerHomeScreen() {
 
         {/* Categories */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
-          <CategoryItem index={0} icon="flame" label="Puja" active onPress={() => router.push('/(customer)/pandits')} />
-          <CategoryItem index={1} icon="basket" label="Samagri" onPress={() => router.push('/(customer)/shop')} />
-          <CategoryItem index={2} icon="people" label="Pandits" onPress={() => router.push('/(customer)/pandits')} />
-          <CategoryItem index={3} icon="planet" label="Kundali" onPress={() => router.push('/(customer)/kundali')} />
+          <CategoryItem index={0} icon="flame" label={t('categories.puja')} active onPress={() => router.push('/(customer)/pandits')} />
+          <CategoryItem index={1} icon="basket" label={t('categories.samagri')} onPress={() => router.push('/(customer)/shop')} />
+          <CategoryItem index={2} icon="people" label={t('categories.pandits')} onPress={() => router.push('/(customer)/pandits')} />
+          <CategoryItem index={3} icon="planet" label={t('categories.kundali')} onPress={() => router.push('/(customer)/kundali')} />
         </ScrollView>
 
         {/* Daily Quote Widget */}
@@ -84,9 +86,9 @@ export default function CustomerHomeScreen() {
 
         {/* Recommended Products */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recommended Samagri</Text>
+          <Text style={styles.sectionTitle}>{t('recommendedSamagri')}</Text>
           <TouchableOpacity onPress={() => router.push('/(customer)/shop')}>
-            <Text style={styles.seeAllText}>See all</Text>
+            <Text style={styles.seeAllText}>{t('seeAll')}</Text>
           </TouchableOpacity>
         </View>
 

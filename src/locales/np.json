@@ -1,0 +1,22 @@
+{
+  "welcome": "नमस्ते",
+  "greetingSubtitle": "आज शान्ति र आशीर्वाद पाउनुहोस्।",
+  "searchPlaceholder": "पण्डित, सामग्री वा पूजा खोज्नुहोस्...",
+  "categories": {
+    "puja": "पूजा",
+    "samagri": "सामग्री",
+    "pandits": "पण्डितहरू",
+    "kundali": "कुण्डली"
+  },
+  "recommendedSamagri": "सिफारिस गरिएको सामग्री",
+  "seeAll": "सबै हेर्नुहोस्",
+  "popularPandits": "लोकप्रिय पण्डितहरू",
+  "bookNow": "अहिले बुक गर्नुहोस्",
+  "addToCart": "थप्नुहोस्",
+  "profile": {
+    "title": "प्रोफाइल",
+    "darkMode": "डार्क मोड",
+    "language": "भाषा",
+    "logout": "लगआउट"
+  }
+}
