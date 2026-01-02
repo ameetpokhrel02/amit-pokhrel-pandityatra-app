@@ -3,52 +3,17 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image,
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
-
-// Dummy Data
-const CATEGORIES = ['All', 'Puja Items', 'Books', 'Rituals', 'Gita', 'Bhagwat', 'Ramayan'];
-
-const PRODUCTS = [
-  { id: '1', name: 'Puja Thali Set', price: 1200, category: 'Puja Items', image: 'basket-outline', description: 'Complete brass thali set for daily puja.' },
-  { id: '2', name: 'Ghee Lamp (Diya)', price: 450, category: 'Puja Items', image: 'flame-outline', description: 'Traditional brass diya.' },
-  { id: '3', name: 'Veda Book', price: 800, category: 'Books', image: 'book-outline', description: 'Ancient vedic wisdom.' },
-  { id: '4', name: 'Incense Sticks (Pack)', price: 150, category: 'Puja Items', image: 'leaf-outline', description: 'Natural fragrance.' },
-  { id: '5', name: 'Bratabandha Kit', price: 5000, category: 'Rituals', image: 'gift-outline', description: 'All essentials for Bratabandha ceremony.', recommended: true },
-  { id: '6', name: 'Rudraksha Mala', price: 1500, category: 'Puja Items', image: 'radio-button-on-outline', description: '108 beads mala.' },
-  { id: '7', name: 'Bhagavad Gita', price: 550, category: 'Gita', image: 'book-outline', description: 'The divine song of God.' },
-  { id: '8', name: 'Srimad Bhagavatam', price: 2500, category: 'Bhagwat', image: 'library-outline', description: 'Complete set of Puranic texts.' },
-  { id: '9', name: 'Ramayan', price: 1200, category: 'Ramayan', image: 'book-outline', description: 'The epic journey of Lord Rama.' },
-  { id: '10', name: 'Havan Samagri', price: 300, category: 'Rituals', image: 'flame-outline', description: 'Mixed herbs for fire rituals.' },
-];
+import { useCart } from '@/store/CartContext';
+import { PRODUCTS, CATEGORIES } from '@/data/products';
 
 export default function ShopScreen() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [cartItems, setCartItems] = useState<{ [key: string]: number }>({});
+  const { addToCart, updateQuantity, getItemCount, totalItems, totalPrice } = useCart();
 
   const filteredProducts = selectedCategory === 'All' 
     ? PRODUCTS 
     : PRODUCTS.filter(p => p.category === selectedCategory);
-
-  const addToCart = (id: string) => {
-    setCartItems(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
-  };
-
-  const removeFromCart = (id: string) => {
-    setCartItems(prev => {
-      const newCount = (prev[id] || 0) - 1;
-      if (newCount <= 0) {
-        const { [id]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [id]: newCount };
-    });
-  };
-
-  const totalItems = Object.values(cartItems).reduce((a, b) => a + b, 0);
-  const totalPrice = Object.entries(cartItems).reduce((total, [id, count]) => {
-    const product = PRODUCTS.find(p => p.id === id);
-    return total + (product ? product.price * count : 0);
-  }, 0);
 
   return (
     <View style={styles.container}>
@@ -111,35 +76,48 @@ export default function ShopScreen() {
 
         {/* Product List */}
         <View style={styles.productList}>
-          {filteredProducts.map((item) => (
-            <View key={item.id} style={styles.productCard}>
-              <View style={styles.productImage}>
-                <Ionicons name={item.image as any} size={40} color="#9CA3AF" />
-              </View>
-              <View style={styles.productInfo}>
-                <Text style={styles.productName}>{item.name}</Text>
-                <Text style={styles.productDescription} numberOfLines={1}>{item.description}</Text>
-                <Text style={styles.productPrice}>NPR {item.price}</Text>
-              </View>
-              <View style={styles.productActions}>
-                {cartItems[item.id] ? (
-                  <View style={styles.quantityControl}>
-                    <TouchableOpacity onPress={() => removeFromCart(item.id)} style={styles.qtyButton}>
-                      <Ionicons name="remove" size={16} color="#FFF" />
+          {filteredProducts.map((item) => {
+            const quantity = getItemCount(item.id);
+            return (
+              <TouchableOpacity 
+                key={item.id} 
+                style={styles.productCard}
+                onPress={() => router.push(`/(customer)/shop/${item.id}`)}
+              >
+                <View style={styles.productImage}>
+                  <Ionicons name={item.image as any} size={40} color="#9CA3AF" />
+                </View>
+                <View style={styles.productInfo}>
+                  <Text style={styles.productName}>{item.name}</Text>
+                  <Text style={styles.productDescription} numberOfLines={1}>{item.description}</Text>
+                  <Text style={styles.productPrice}>NPR {item.price}</Text>
+                </View>
+                <View style={styles.productActions}>
+                  {quantity > 0 ? (
+                    <View style={styles.quantityControl}>
+                      <TouchableOpacity 
+                        onPress={() => updateQuantity(item.id, quantity - 1)} 
+                        style={styles.qtyButton}
+                      >
+                        <Ionicons name="remove" size={16} color="#FFF" />
+                      </TouchableOpacity>
+                      <Text style={styles.qtyText}>{quantity}</Text>
+                      <TouchableOpacity 
+                        onPress={() => addToCart(item)} 
+                        style={styles.qtyButton}
+                      >
+                        <Ionicons name="add" size={16} color="#FFF" />
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity style={styles.addButton} onPress={() => addToCart(item)}>
+                      <Text style={styles.addButtonText}>Add</Text>
                     </TouchableOpacity>
-                    <Text style={styles.qtyText}>{cartItems[item.id]}</Text>
-                    <TouchableOpacity onPress={() => addToCart(item.id)} style={styles.qtyButton}>
-                      <Ionicons name="add" size={16} color="#FFF" />
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <TouchableOpacity style={styles.addButton} onPress={() => addToCart(item.id)}>
-                    <Text style={styles.addButtonText}>Add</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          ))}
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </ScrollView>
 

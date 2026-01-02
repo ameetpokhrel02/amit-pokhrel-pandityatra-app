@@ -3,19 +3,38 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
-
-// Dummy Cart Data
-const CART_ITEMS = [
-  { id: '1', name: 'Puja Thali Set', price: 1200, quantity: 1, image: 'basket-outline' },
-  { id: '4', name: 'Incense Sticks (Pack)', price: 150, quantity: 2, image: 'leaf-outline' },
-];
+import { useCart } from '@/store/CartContext';
 
 export default function CartScreen() {
   const router = useRouter();
+  const { items, updateQuantity, addToCart, totalPrice } = useCart();
 
-  const subtotal = CART_ITEMS.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const deliveryFee = 100;
-  const total = subtotal + deliveryFee;
+  const total = totalPrice + deliveryFee;
+
+  if (items.length === 0) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back-outline" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>My Cart</Text>
+          <View style={{ width: 24 }} /> 
+        </View>
+        <View style={[styles.content, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Ionicons name="cart-outline" size={64} color="#CCC" />
+          <Text style={{ marginTop: 16, fontSize: 16, color: '#666' }}>Your cart is empty</Text>
+          <TouchableOpacity 
+            style={[styles.checkoutButton, { marginTop: 24, width: 200 }]} 
+            onPress={() => router.push('/(customer)/shop')}
+          >
+            <Text style={styles.checkoutButtonText}>Start Shopping</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -29,7 +48,7 @@ export default function CartScreen() {
       </View>
 
       <ScrollView style={styles.content}>
-        {CART_ITEMS.map((item) => (
+        {items.map((item) => (
           <View key={item.id} style={styles.cartItem}>
             <View style={styles.itemImage}>
               <Ionicons name={item.image as any} size={32} color="#9CA3AF" />
@@ -39,11 +58,17 @@ export default function CartScreen() {
               <Text style={styles.itemPrice}>NPR {item.price}</Text>
             </View>
             <View style={styles.quantityControl}>
-              <TouchableOpacity style={styles.qtyButton}>
+              <TouchableOpacity 
+                style={styles.qtyButton}
+                onPress={() => updateQuantity(item.id, item.quantity - 1)}
+              >
                 <Ionicons name="remove" size={16} color="#666" />
               </TouchableOpacity>
               <Text style={styles.qtyText}>{item.quantity}</Text>
-              <TouchableOpacity style={styles.qtyButton}>
+              <TouchableOpacity 
+                style={styles.qtyButton}
+                onPress={() => addToCart(item)}
+              >
                 <Ionicons name="add" size={16} color="#666" />
               </TouchableOpacity>
             </View>
@@ -54,7 +79,7 @@ export default function CartScreen() {
           <Text style={styles.summaryTitle}>Order Summary</Text>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>NPR {subtotal}</Text>
+            <Text style={styles.summaryValue}>NPR {totalPrice}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Delivery Fee</Text>

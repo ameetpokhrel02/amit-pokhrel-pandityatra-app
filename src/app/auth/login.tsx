@@ -1,20 +1,36 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Colors } from '@/constants/Colors';
+import { useAuth } from '@/store/AuthContext';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login } = useAuth();
   const [identifier, setIdentifier] = useState('');
   const [method, setMethod] = useState<'phone' | 'email'>('phone');
 
-  const handleRequestOTP = () => {
-    // TODO: Validate input
-    // TODO: Call API to send OTP
-    router.push({ pathname: '/auth/otp', params: { identifier, method } } as any);
+  const handleLogin = () => {
+    if (method === 'phone') {
+      const success = login(identifier);
+      if (success) {
+        router.replace('/(customer)' as any);
+      } else {
+        // For demo purposes, if user not found, we can still allow login or show error.
+        // But the user asked to "dilau his name", so we need the registered user.
+        // If not found, maybe show alert "User not found, please register".
+        // However, for testing without registering every time, maybe we can just set a dummy user if not found?
+        // No, the user specifically said "if amit pokhrel user create account navitaig him for login and dilau his name".
+        // So we should enforce registration.
+        Alert.alert('Login Failed', 'User not found. Please register first.');
+      }
+    } else {
+      // Email login not implemented in context yet, just redirect
+      router.replace('/(customer)' as any);
+    }
   };
 
   return (
@@ -66,14 +82,14 @@ export default function LoginScreen() {
           </View>
 
           <Button 
-            title="Request OTP" 
-            onPress={handleRequestOTP} 
+            title="Login" 
+            onPress={handleLogin} 
             style={styles.submitButton}
           />
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
-            <Text style={styles.link} onPress={() => router.push('/auth/register' as any)}>Register</Text>
+            <Text style={styles.link} onPress={() => router.push('/auth/customer-register' as any)}>Register</Text>
           </View>
         </View>
       </ScrollView>
