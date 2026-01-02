@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { MotiView } from 'moti';
 
 export default function KundaliScreen() {
   const router = useRouter();
@@ -27,14 +28,34 @@ export default function KundaliScreen() {
       <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
         {/* 1. Hero Section */}
         <View style={styles.heroSection}>
-            <View style={styles.heroIconContainer}>
+            <MotiView
+                from={{ rotate: '0deg' }}
+                animate={{ rotate: '360deg' }}
+                transition={{
+                    type: 'timing',
+                    duration: 20000,
+                    loop: true,
+                    repeatReverse: false,
+                }}
+                style={styles.heroIconContainer}
+            >
                 <Ionicons name="planet-outline" size={64} color="#f97316" />
-            </View>
+            </MotiView>
             <Text style={styles.heroTitle}>Offline Kundali – Your Birth Chart, Private & Secure</Text>
             <Text style={styles.heroSubtitle}>Generate your Kundali without internet. Your data stays on your device.</Text>
-            <TouchableOpacity style={styles.heroButton} onPress={() => {}}>
-                <Text style={styles.heroButtonText}>Generate Kundali</Text>
-            </TouchableOpacity>
+            <MotiView
+                from={{ scale: 1 }}
+                animate={{ scale: 1.05 }}
+                transition={{
+                    type: 'timing',
+                    duration: 1500,
+                    loop: true,
+                }}
+            >
+                <TouchableOpacity style={styles.heroButton} onPress={() => {}}>
+                    <Text style={styles.heroButtonText}>Generate Kundali</Text>
+                </TouchableOpacity>
+            </MotiView>
         </View>
 
         {/* 2. What Is Offline Kundali? */}

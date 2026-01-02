@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { useCart } from '@/store/CartContext';
 import { PRODUCTS, CATEGORIES } from '@/data/products';
+import { MotiView } from 'moti';
 
 export default function ShopScreen() {
   const router = useRouter();
@@ -76,46 +77,57 @@ export default function ShopScreen() {
 
         {/* Product List */}
         <View style={styles.productList}>
-          {filteredProducts.map((item) => {
+          {filteredProducts.map((item, index) => {
             const quantity = getItemCount(item.id);
             return (
-              <TouchableOpacity 
-                key={item.id} 
-                style={styles.productCard}
-                onPress={() => router.push(`/(customer)/shop/${item.id}`)}
+              <MotiView
+                key={item.id}
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ delay: index * 50 }}
               >
-                <View style={styles.productImage}>
-                  <Ionicons name={item.image as any} size={40} color="#9CA3AF" />
-                </View>
-                <View style={styles.productInfo}>
-                  <Text style={styles.productName}>{item.name}</Text>
-                  <Text style={styles.productDescription} numberOfLines={1}>{item.description}</Text>
-                  <Text style={styles.productPrice}>NPR {item.price}</Text>
-                </View>
-                <View style={styles.productActions}>
-                  {quantity > 0 ? (
-                    <View style={styles.quantityControl}>
-                      <TouchableOpacity 
-                        onPress={() => updateQuantity(item.id, quantity - 1)} 
-                        style={styles.qtyButton}
+                <TouchableOpacity 
+                  style={styles.productCard}
+                  onPress={() => router.push(`/(customer)/shop/${item.id}`)}
+                >
+                  <View style={styles.productImage}>
+                    <Ionicons name={item.image as any} size={40} color="#9CA3AF" />
+                  </View>
+                  <View style={styles.productInfo}>
+                    <Text style={styles.productName}>{item.name}</Text>
+                    <Text style={styles.productDescription} numberOfLines={1}>{item.description}</Text>
+                    <Text style={styles.productPrice}>NPR {item.price}</Text>
+                  </View>
+                  <View style={styles.productActions}>
+                    {quantity > 0 ? (
+                      <MotiView
+                        from={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: 'spring' }}
+                        style={styles.quantityControl}
                       >
-                        <Ionicons name="remove" size={16} color="#FFF" />
+                        <TouchableOpacity 
+                          onPress={() => updateQuantity(item.id, quantity - 1)} 
+                          style={styles.qtyButton}
+                        >
+                          <Ionicons name="remove" size={16} color="#FFF" />
+                        </TouchableOpacity>
+                        <Text style={styles.qtyText}>{quantity}</Text>
+                        <TouchableOpacity 
+                          onPress={() => addToCart(item)} 
+                          style={styles.qtyButton}
+                        >
+                          <Ionicons name="add" size={16} color="#FFF" />
+                        </TouchableOpacity>
+                      </MotiView>
+                    ) : (
+                      <TouchableOpacity style={styles.addButton} onPress={() => addToCart(item)}>
+                        <Text style={styles.addButtonText}>Add</Text>
                       </TouchableOpacity>
-                      <Text style={styles.qtyText}>{quantity}</Text>
-                      <TouchableOpacity 
-                        onPress={() => addToCart(item)} 
-                        style={styles.qtyButton}
-                      >
-                        <Ionicons name="add" size={16} color="#FFF" />
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <TouchableOpacity style={styles.addButton} onPress={() => addToCart(item)}>
-                      <Text style={styles.addButtonText}>Add</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </TouchableOpacity>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </MotiView>
             );
           })}
         </View>

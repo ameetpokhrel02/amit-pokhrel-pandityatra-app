@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme, View, Text } from 'react-native';
 import { CartProvider, useCart } from '@/store/CartContext';
+import { MotiView } from 'moti';
 
 function CartIcon({ color, focused }: { color: string, focused: boolean }) {
   const { totalItems } = useCart();
@@ -10,19 +11,25 @@ function CartIcon({ color, focused }: { color: string, focused: boolean }) {
     <View>
       <Ionicons name={focused ? 'cart' : 'cart-outline'} size={24} color={color} />
       {totalItems > 0 && (
-        <View style={{
-          position: 'absolute',
-          right: -6,
-          top: -3,
-          backgroundColor: '#EF4444',
-          borderRadius: 8,
-          width: 16,
-          height: 16,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
+        <MotiView
+          key={totalItems}
+          from={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', damping: 15 }}
+          style={{
+            position: 'absolute',
+            right: -6,
+            top: -3,
+            backgroundColor: '#EF4444',
+            borderRadius: 8,
+            width: 16,
+            height: 16,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
           <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>{totalItems}</Text>
-        </View>
+        </MotiView>
       )}
     </View>
   );

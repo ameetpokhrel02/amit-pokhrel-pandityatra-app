@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useCart } from '@/store/CartContext';
 import { useAuth } from '@/store/AuthContext';
 import { PRODUCTS } from '@/data/products';
+import { MotiView, MotiText } from 'moti';
 
 // Get a few products for the recommended section
 const RECOMMENDED_PRODUCTS = PRODUCTS.slice(0, 5);
@@ -37,13 +38,23 @@ export default function CustomerHomeScreen() {
         </View>
 
         {/* Greeting */}
-        <View style={styles.greetingSection}>
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 500 }}
+          style={styles.greetingSection}
+        >
           <Text style={styles.greetingTitle}>Namaste, {user?.name || 'Guest'}!</Text>
           <Text style={styles.greetingSubtitle}>Find peace and blessings today.</Text>
-        </View>
+        </MotiView>
 
         {/* Search Bar */}
-        <View style={styles.searchContainer}>
+        <MotiView
+          from={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'timing', duration: 500, delay: 100 }}
+          style={styles.searchContainer}
+        >
           <Ionicons name="search-outline" size={20} color="#999" />
           <TextInput 
             placeholder="Search Pandit, Samagri, or Puja..." 
@@ -53,14 +64,14 @@ export default function CustomerHomeScreen() {
           <TouchableOpacity style={styles.filterButton}>
             <Ionicons name="options-outline" size={20} color={Colors.light.primary} />
           </TouchableOpacity>
-        </View>
+        </MotiView>
 
         {/* Categories */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
-          <CategoryItem icon="flame" label="Puja" active onPress={() => router.push('/(customer)/pandits')} />
-          <CategoryItem icon="basket" label="Samagri" onPress={() => router.push('/(customer)/shop')} />
-          <CategoryItem icon="people" label="Pandits" onPress={() => router.push('/(customer)/pandits')} />
-          <CategoryItem icon="planet" label="Kundali" onPress={() => router.push('/(customer)/kundali')} />
+          <CategoryItem index={0} icon="flame" label="Puja" active onPress={() => router.push('/(customer)/pandits')} />
+          <CategoryItem index={1} icon="basket" label="Samagri" onPress={() => router.push('/(customer)/shop')} />
+          <CategoryItem index={2} icon="people" label="Pandits" onPress={() => router.push('/(customer)/pandits')} />
+          <CategoryItem index={3} icon="planet" label="Kundali" onPress={() => router.push('/(customer)/kundali')} />
         </ScrollView>
 
         {/* Recommended Products */}
@@ -159,14 +170,24 @@ export default function CustomerHomeScreen() {
   );
 }
 
-function CategoryItem({ icon, label, active, onPress }: { icon: any, label: string, active?: boolean, onPress: () => void }) {
+function CategoryItem({ icon, label, active, onPress, index }: { icon: any, label: string, active?: boolean, onPress: () => void, index: number }) {
   return (
-    <TouchableOpacity style={[styles.categoryItem, active && styles.categoryItemActive]} onPress={onPress}>
-      <View style={[styles.categoryIcon, active && styles.categoryIconActive]}>
-        <Ionicons name={icon} size={24} color={active ? '#FFF' : '#666'} />
-      </View>
-      <Text style={[styles.categoryLabel, active && styles.categoryLabelActive]}>{label}</Text>
-    </TouchableOpacity>
+    <MotiView
+      from={{ opacity: 0, scale: 0.8, translateY: 20 }}
+      animate={{ opacity: 1, scale: 1, translateY: 0 }}
+      transition={{
+        type: 'spring',
+        damping: 15,
+        delay: index * 100,
+      }}
+    >
+      <TouchableOpacity style={[styles.categoryItem, active && styles.categoryItemActive]} onPress={onPress}>
+        <View style={[styles.categoryIcon, active && styles.categoryIconActive]}>
+          <Ionicons name={icon} size={24} color={active ? '#FFF' : '#666'} />
+        </View>
+        <Text style={[styles.categoryLabel, active && styles.categoryLabelActive]}>{label}</Text>
+      </TouchableOpacity>
+    </MotiView>
   );
 }
 
