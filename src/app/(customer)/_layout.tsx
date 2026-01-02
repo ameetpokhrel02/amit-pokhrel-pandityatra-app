@@ -35,9 +35,12 @@ function CartIcon({ color, focused }: { color: string, focused: boolean }) {
   );
 }
 
+import { useTheme } from '@/store/ThemeContext';
+
 export default function CustomerTabLayout() {
-  const colorScheme = useColorScheme();
-  const activeColor = Colors.light.primary; // Saffron
+  const { colors, theme } = useTheme();
+  const isDark = theme === 'dark';
+  const activeColor = colors.primary;
   const inactiveColor = '#8E8E93';
 
   return (
@@ -48,8 +51,8 @@ export default function CustomerTabLayout() {
           tabBarInactiveTintColor: inactiveColor,
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: Colors.light.background,
-            borderTopColor: '#E5E5EA',
+            backgroundColor: colors.background,
+            borderTopColor: isDark ? '#333' : '#E5E5EA',
           },
         }}
       >
@@ -115,6 +118,18 @@ export default function CustomerTabLayout() {
         />
         <Tabs.Screen
           name="kundali"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="booking"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="pandit/[id]"
           options={{
             href: null,
           }}

@@ -7,6 +7,8 @@ import { useCart } from '@/store/CartContext';
 import { useAuth } from '@/store/AuthContext';
 import { PRODUCTS } from '@/data/products';
 import { MotiView, MotiText } from 'moti';
+import { DailyPanchang } from '@/components/home/DailyPanchang';
+import { DailyQuote } from '@/components/home/DailyQuote';
 
 // Get a few products for the recommended section
 const RECOMMENDED_PRODUCTS = PRODUCTS.slice(0, 5);
@@ -48,6 +50,9 @@ export default function CustomerHomeScreen() {
           <Text style={styles.greetingSubtitle}>Find peace and blessings today.</Text>
         </MotiView>
 
+        {/* Daily Panchang Widget */}
+        <DailyPanchang />
+
         {/* Search Bar */}
         <MotiView
           from={{ opacity: 0, scale: 0.95 }}
@@ -73,6 +78,9 @@ export default function CustomerHomeScreen() {
           <CategoryItem index={2} icon="people" label="Pandits" onPress={() => router.push('/(customer)/pandits')} />
           <CategoryItem index={3} icon="planet" label="Kundali" onPress={() => router.push('/(customer)/kundali')} />
         </ScrollView>
+
+        {/* Daily Quote Widget */}
+        <DailyQuote />
 
         {/* Recommended Products */}
         <View style={styles.sectionHeader}>

@@ -4,7 +4,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { MotiView, AnimatePresence } from 'moti';
 import LottieView from 'lottie-react-native';
+import DateTimePicker from 'react-native-ui-datepicker';
+import dayjs from 'dayjs';
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/store/ThemeContext';
 import { PanditService } from '@/services/pandit.service';
 import { Pandit } from '@/types/pandit';
 
@@ -13,13 +16,15 @@ const STEPS = ['Service', 'Date & Time', 'Address', 'Review'];
 export default function BookingScreen() {
   const { panditId } = useLocalSearchParams();
   const router = useRouter();
+  const { colors, theme } = useTheme();
+  const isDark = theme === 'dark';
   const [currentStep, setCurrentStep] = useState(0);
   const [pandit, setPandit] = useState<Pandit | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
   // Form State
   const [selectedService, setSelectedService] = useState('');
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState('');
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
@@ -177,44 +182,48 @@ export default function BookingScreen() {
             >
               <Text style={styles.stepTitle}>Select Date & Time</Text>
               
-              <Text style={styles.subLabel}>Date</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dateScroll}>
-                {[0, 1, 2, 3, 4, 5, 6].map((offset) => {
-                  const date = new Date();
-                  date.setDate(date.getDate() + offset);
-                  const isSelected = selectedDate?.toDateString() === date.toDateString();
-                  
-                  return (
-                    <TouchableOpacity
-                      key={offset}
-                      style={[styles.dateCard, isSelected && styles.dateCardActive]}
-                      onPress={() => setSelectedDate(date)}
-                    >
-                      <Text style={[styles.dayText, isSelected && styles.dayTextActive]}>
-                        {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                      </Text>
-                      <Text style={[styles.dateText, isSelected && styles.dateTextActive]}>
-                        {date.getDate()}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
+              <Text style={[styles.subLabel, { color: colors.text }]}>Select Date</Text>
+              <View style={[styles.calendarContainer, { backgroundColor: colors.background, borderColor: colors.inputBorder }]}>
+                <DateTimePicker
+                  mode="single"
+                  date={selectedDate}
+                  onChange={(params) => setSelectedDate(dayjs(params.date))}
+                  minDate={dayjs().startOf('day')}
+                  // @ts-ignore
+                  selectedItemColor={colors.primary}
+                  headerTextStyle={{ color: colors.text, fontWeight: 'bold', fontSize: 16 }}
+                  calendarTextStyle={{ color: colors.text }}
+                  selectedTextStyle={{ color: '#FFF', fontWeight: 'bold' }}
+                  weekDaysTextStyle={{ color: isDark ? '#999' : '#666' }}
+                  todayContainerStyle={{ borderWidth: 1, borderColor: colors.primary }}
+                  todayTextStyle={{ color: colors.primary }}
+                  // @ts-ignore
+                  headerButtonColor={colors.primary}
+                />
+              </View>
 
-              <Text style={styles.subLabel}>Time Slot</Text>
+              <Text style={[styles.subLabel, { color: colors.text }]}>Time Slot</Text>
               <View style={styles.timeGrid}>
                 {['Morning (6-9 AM)', 'Day (10-2 PM)', 'Evening (4-7 PM)'].map((time) => (
                   <TouchableOpacity
                     key={time}
-                    style={[styles.timeCard, selectedTime === time && styles.timeCardActive]}
+                    style={[
+                      styles.timeCard, 
+                      { backgroundColor: colors.background, borderColor: colors.inputBorder },
+                      selectedTime === time && { backgroundColor: colors.primary, borderColor: colors.primary }
+                    ]}
                     onPress={() => setSelectedTime(time)}
                   >
                     <Ionicons 
                       name={time.includes('Morning') ? 'sunny-outline' : time.includes('Evening') ? 'moon-outline' : 'time-outline'} 
                       size={20} 
-                      color={selectedTime === time ? '#FFF' : '#666'} 
+                      color={selectedTime === time ? '#FFF' : colors.text} 
                     />
-                    <Text style={[styles.timeText, selectedTime === time && styles.timeTextActive]}>
+                    <Text style={[
+                      styles.timeText, 
+                      { color: colors.text },
+                      selectedTime === time && { color: '#FFF', fontWeight: '600' }
+                    ]}>
                       {time}
                     </Text>
                   </TouchableOpacity>
@@ -282,7 +291,7 @@ export default function BookingScreen() {
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Date & Time</Text>
                   <Text style={styles.summaryValue}>
-                    {selectedDate?.toLocaleDateString()} | {selectedTime}
+                    {dayjs(selectedDate).format('ddd, MMM D')} | {selectedTime}
                   </Text>
                 </View>
                 <View style={styles.summaryDivider} />
@@ -462,7 +471,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 8,
   },
-  dateScroll: {
+  calendarContainer: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
     marginBottom: 24,
   },
   dateCard: {
