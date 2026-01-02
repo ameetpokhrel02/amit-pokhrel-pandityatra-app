@@ -65,6 +65,15 @@ export default function CustomerTabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="shop"
+        options={{
+          title: 'Shop',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'basket' : 'basket-outline'} size={24} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

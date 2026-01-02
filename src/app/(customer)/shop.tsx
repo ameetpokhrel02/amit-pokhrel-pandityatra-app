@@ -5,15 +5,19 @@ import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 
 // Dummy Data
-const CATEGORIES = ['All', 'Puja Items', 'Books', 'Special Kits'];
+const CATEGORIES = ['All', 'Puja Items', 'Books', 'Rituals', 'Gita', 'Bhagwat', 'Ramayan'];
 
 const PRODUCTS = [
   { id: '1', name: 'Puja Thali Set', price: 1200, category: 'Puja Items', image: 'basket-outline', description: 'Complete brass thali set for daily puja.' },
   { id: '2', name: 'Ghee Lamp (Diya)', price: 450, category: 'Puja Items', image: 'flame-outline', description: 'Traditional brass diya.' },
   { id: '3', name: 'Veda Book', price: 800, category: 'Books', image: 'book-outline', description: 'Ancient vedic wisdom.' },
   { id: '4', name: 'Incense Sticks (Pack)', price: 150, category: 'Puja Items', image: 'leaf-outline', description: 'Natural fragrance.' },
-  { id: '5', name: 'Bratabandha Kit', price: 5000, category: 'Special Kits', image: 'gift-outline', description: 'All essentials for Bratabandha ceremony.', recommended: true },
+  { id: '5', name: 'Bratabandha Kit', price: 5000, category: 'Rituals', image: 'gift-outline', description: 'All essentials for Bratabandha ceremony.', recommended: true },
   { id: '6', name: 'Rudraksha Mala', price: 1500, category: 'Puja Items', image: 'radio-button-on-outline', description: '108 beads mala.' },
+  { id: '7', name: 'Bhagavad Gita', price: 550, category: 'Gita', image: 'book-outline', description: 'The divine song of God.' },
+  { id: '8', name: 'Srimad Bhagavatam', price: 2500, category: 'Bhagwat', image: 'library-outline', description: 'Complete set of Puranic texts.' },
+  { id: '9', name: 'Ramayan', price: 1200, category: 'Ramayan', image: 'book-outline', description: 'The epic journey of Lord Rama.' },
+  { id: '10', name: 'Havan Samagri', price: 300, category: 'Rituals', image: 'flame-outline', description: 'Mixed herbs for fire rituals.' },
 ];
 
 export default function ShopScreen() {
@@ -333,13 +337,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.light.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
   addButtonText: {
-    color: Colors.light.primary,
+    color: '#FFF',
     fontWeight: 'bold',
     fontSize: 12,
   },
