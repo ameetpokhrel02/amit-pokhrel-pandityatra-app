@@ -1,35 +1,18 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Button } from '@/components/ui/Button';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 import { Colors } from '@/constants/Colors';
 
 export default function OTPScreen() {
   const router = useRouter();
   const { identifier, method } = useLocalSearchParams();
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const inputs = useRef<Array<TextInput | null>>([]);
-
-  const handleOtpChange = (text: string, index: number) => {
-    const newOtp = [...otp];
-    newOtp[index] = text;
-    setOtp(newOtp);
-
-    if (text && index < 5) {
-      inputs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
-      inputs.current[index - 1]?.focus();
-    }
-  };
+  const [otp, setOtp] = useState('');
 
   const handleVerify = () => {
-    const otpString = otp.join('');
-    if (otpString.length === 6) {
+    if (otp.length === 6) {
       // TODO: Verify OTP API
       // Mock success
       // Determine user role (mock logic)
@@ -61,26 +44,20 @@ export default function OTPScreen() {
             />
           </View>
 
-          <Text style={styles.title}>Verify OTP</Text>
+          <Text style={styles.title}>Verify OTP Code</Text>
           <Text style={styles.subtitle}>
             Enter the code sent to {identifier || 'your phone/email'}
           </Text>
 
-          <View style={styles.otpContainer}>
-            {otp.map((digit, index) => (
-              <TextInput
-                key={index}
-                ref={(ref) => { inputs.current[index] = ref; }}
-                style={styles.otpInput}
-                value={digit}
-                onChangeText={(text) => handleOtpChange(text, index)}
-                onKeyPress={(e) => handleKeyPress(e, index)}
-                keyboardType="number-pad"
-                maxLength={1}
-                selectTextOnFocus
-              />
-            ))}
-          </View>
+          <Input
+            label="OTP Code"
+            placeholder="123456"
+            value={otp}
+            onChangeText={setOtp}
+            keyboardType="number-pad"
+            maxLength={6}
+            style={styles.otpInput}
+          />
 
           <Button 
             title="Verify" 
@@ -139,21 +116,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
   },
-  otpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 32,
-  },
   otpInput: {
-    width: 45,
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    textAlign: 'center',
-    fontSize: 20,
-    backgroundColor: Colors.light.inputBackground,
-    color: Colors.light.text,
+    marginBottom: 24,
   },
   submitButton: {
     marginTop: 0,

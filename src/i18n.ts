@@ -11,24 +11,25 @@ const resources = {
   np: { translation: np },
 };
 
-const initI18n = async () => {
-  let savedLanguage = await AsyncStorage.getItem('language');
+// Initialize immediately to prevent race conditions/Suspense errors
+i18n.use(initReactI18next).init({
+  resources,
+  lng: 'np', // Default startup language
+  fallbackLng: 'en',
+  interpolation: {
+    escapeValue: false,
+  },
+  compatibilityJSON: 'v4',
+  react: {
+    useSuspense: false, // Disable Suspense to prevent crashes if not wrapped
+  },
+});
 
-  if (!savedLanguage) {
-    savedLanguage = 'np'; // Default to Nepali as requested
+// Load saved language asynchronously
+AsyncStorage.getItem('language').then((savedLanguage) => {
+  if (savedLanguage) {
+    i18n.changeLanguage(savedLanguage);
   }
-
-  i18n.use(initReactI18next).init({
-    resources,
-    lng: savedLanguage,
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-    compatibilityJSON: 'v3', // Required for Android
-  });
-};
-
-initI18n();
+});
 
 export default i18n;

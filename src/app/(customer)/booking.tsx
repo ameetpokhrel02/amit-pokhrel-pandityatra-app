@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert,
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { MotiView, AnimatePresence } from 'moti';
-import LottieView from 'lottie-react-native';
+import { LottieAnimation } from '@/components/ui/LottieAnimation';
 import DateTimePicker from 'react-native-ui-datepicker';
 import dayjs from 'dayjs';
 import { Colors } from '@/constants/Colors';
@@ -78,7 +78,7 @@ export default function BookingScreen() {
   if (isSuccess) {
     return (
       <View style={styles.successContainer}>
-        <LottieView
+        <LottieAnimation
           source={require('@/assets/animations/success.json')} // Make sure this file exists or use a placeholder
           autoPlay
           loop={false}
