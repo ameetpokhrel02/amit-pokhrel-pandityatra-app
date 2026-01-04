@@ -134,6 +134,21 @@ export default function CustomerTabLayout() {
             href: null,
           }}
         />
+        <Tabs.Screen
+          name="chat/index"
+          options={{
+            title: 'Chat',
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'chatbubbles' : 'chatbubbles-outline'} size={24} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="chat/[id]"
+          options={{
+            href: null,
+          }}
+        />
       </Tabs>
     </CartProvider>
   );
