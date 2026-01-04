@@ -107,7 +107,7 @@ export default function ProfileScreen() {
               <Text style={styles.placeholderText}>{user?.name?.[0]?.toUpperCase() || 'U'}</Text>
             </View>
           )}
-          <View style={[styles.editIconBadge, { backgroundColor: colors.primary }]}>
+          <View style={[styles.editIconBadge, { backgroundColor: colors.primary, borderColor: colors.background }]}>
             <Ionicons name="camera" size={14} color="#FFF" />
           </View>
         </TouchableOpacity>
@@ -141,7 +141,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* Settings Section */}
-      <View style={[styles.section, { backgroundColor: isDark ? '#1a1a1a' : '#f5f5f5' }]}>
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
         <View style={styles.row}>
           <View style={styles.rowLeft}>
             <Ionicons name={isDark ? "moon" : "sunny"} size={24} color={colors.text} />
@@ -155,7 +155,7 @@ export default function ProfileScreen() {
           />
         </View>
         
-        <View style={[styles.divider, { backgroundColor: isDark ? '#333' : '#e5e5e5' }]} />
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
         <View style={styles.row}>
           <View style={styles.rowLeft}>
@@ -171,13 +171,13 @@ export default function ProfileScreen() {
       </View>
 
       {/* More Settings */}
-      <View style={[styles.section, { backgroundColor: isDark ? '#1a1a1a' : '#f5f5f5' }]}>
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
         {renderSettingItem("notifications-outline", "Notifications", () => {})}
-        <View style={[styles.divider, { backgroundColor: isDark ? '#333' : '#e5e5e5' }]} />
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
         {renderSettingItem("lock-closed-outline", "Privacy Policy", () => {})}
-        <View style={[styles.divider, { backgroundColor: isDark ? '#333' : '#e5e5e5' }]} />
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
         {renderSettingItem("document-text-outline", "Terms of Service", () => {})}
-        <View style={[styles.divider, { backgroundColor: isDark ? '#333' : '#e5e5e5' }]} />
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
         {renderSettingItem("help-circle-outline", "Help & Support", () => {})}
       </View>
 
@@ -248,7 +248,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#FFF',
   },
   nameContainer: {
     alignItems: 'center',

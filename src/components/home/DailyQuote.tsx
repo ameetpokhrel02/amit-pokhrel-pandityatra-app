@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/store/ThemeContext';
 
 const QUOTES = [
   { text: "The mind is everything. What you think you become.", author: "Buddha" },
@@ -14,13 +15,15 @@ const QUOTES = [
 export const DailyQuote = () => {
   // Simple random quote for now
   const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  const { colors, theme } = useTheme();
+  const isDark = theme === 'dark';
 
   return (
     <MotiView
       from={{ opacity: 0, translateY: 20 }}
       animate={{ opacity: 1, translateY: 0 }}
       transition={{ type: 'timing', duration: 600, delay: 300 }}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.primary }]}
     >
       <View style={styles.quoteIcon}>
         <Ionicons name="chatbox-ellipses" size={24} color="rgba(255,255,255,0.8)" />
@@ -37,7 +40,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     padding: 20,
     borderRadius: 16,
-    backgroundColor: Colors.light.primary,
     position: 'relative',
     overflow: 'hidden',
   },

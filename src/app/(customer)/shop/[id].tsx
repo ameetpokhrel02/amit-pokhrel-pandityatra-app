@@ -5,11 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useCart } from '@/store/CartContext';
 import { PRODUCTS } from '@/data/products';
+import { useTheme } from '@/store/ThemeContext';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { addToCart, updateQuantity, getItemCount } = useCart();
+  const { colors, theme } = useTheme();
+  const isDark = theme === 'dark';
   
   const product = PRODUCTS.find(p => p.id === id);
   
@@ -26,8 +29,8 @@ export default function ProductDetailScreen() {
 
   if (!product) {
     return (
-      <View style={styles.container}>
-        <Text>Product not found</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={{ color: colors.text }}>Product not found</Text>
       </View>
     );
   }
@@ -52,82 +55,82 @@ export default function ProductDetailScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <TouchableOpacity>
-          <Ionicons name="heart-outline" size={24} color="#333" />
+          <Ionicons name="heart-outline" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Image */}
-        <View style={styles.imageContainer}>
-          <Ionicons name={product.image as any} size={120} color={Colors.light.primary} />
+        <View style={[styles.imageContainer, { backgroundColor: isDark ? '#333' : '#FFF8E1' }]}>
+          <Ionicons name={product.image as any} size={120} color={colors.primary} />
         </View>
 
         {/* Info */}
         <View style={styles.infoContainer}>
-          <Text style={styles.category}>{product.category}</Text>
+          <Text style={[styles.category, { color: isDark ? '#AAA' : '#666' }]}>{product.category}</Text>
           <View style={styles.titleRow}>
-            <Text style={styles.title}>{product.name}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{product.name}</Text>
             <View style={styles.ratingContainer}>
               <Ionicons name="star" size={16} color="#FFD700" />
-              <Text style={styles.ratingText}>4.8 (120)</Text>
+              <Text style={[styles.ratingText, { color: isDark ? '#AAA' : '#666' }]}>4.8 (120)</Text>
             </View>
           </View>
 
           <View style={styles.priceRow}>
-            <Text style={styles.price}>NPR {product.price}</Text>
+            <Text style={[styles.price, { color: colors.primary }]}>NPR {product.price}</Text>
             
             {cartQuantity > 0 ? (
-               <View style={styles.quantityControl}>
+               <View style={[styles.quantityControl, { backgroundColor: isDark ? '#333' : '#F5F5F5' }]}>
                 <TouchableOpacity 
-                  style={styles.qtyButton} 
+                  style={[styles.qtyButton, { backgroundColor: colors.primary }]} 
                   onPress={handleDecrement}
                 >
                   <Ionicons name="remove" size={20} color="#FFF" />
                 </TouchableOpacity>
-                <Text style={styles.qtyText}>{cartQuantity}</Text>
-                <TouchableOpacity style={styles.qtyButton} onPress={handleIncrement}>
+                <Text style={[styles.qtyText, { color: colors.text }]}>{cartQuantity}</Text>
+                <TouchableOpacity style={[styles.qtyButton, { backgroundColor: colors.primary }]} onPress={handleIncrement}>
                   <Ionicons name="add" size={20} color="#FFF" />
                 </TouchableOpacity>
               </View>
             ) : (
-               <View style={styles.quantityControlDisabled}>
-                  <Text style={styles.qtyTextDisabled}>1</Text>
+               <View style={[styles.quantityControlDisabled, { backgroundColor: isDark ? '#333' : '#F5F5F5' }]}>
+                  <Text style={[styles.qtyTextDisabled, { color: isDark ? '#AAA' : '#999' }]}>1</Text>
                </View>
             )}
           </View>
 
-          <Text style={styles.sectionTitle}>Description</Text>
-          <Text style={styles.description}>{product.description}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Description</Text>
+          <Text style={[styles.description, { color: isDark ? '#CCC' : '#666' }]}>{product.description}</Text>
 
-          <Text style={styles.sectionTitle}>Choice of Add On</Text>
-          <View style={styles.addOnItem}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Choice of Add On</Text>
+          <View style={[styles.addOnItem, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
             <View style={styles.addOnInfo}>
-              <Ionicons name="leaf-outline" size={24} color="#666" />
-              <Text style={styles.addOnName}>Extra Tulsi Leaves</Text>
+              <Ionicons name="leaf-outline" size={24} color={isDark ? '#AAA' : '#666'} />
+              <Text style={[styles.addOnName, { color: colors.text }]}>Extra Tulsi Leaves</Text>
             </View>
             <View style={styles.addOnPriceRow}>
-              <Text style={styles.addOnPrice}>+ NPR 50</Text>
+              <Text style={[styles.addOnPrice, { color: isDark ? '#AAA' : '#666' }]}>+ NPR 50</Text>
               <TouchableOpacity>
-                <Ionicons name="radio-button-off" size={20} color={Colors.light.primary} />
+                <Ionicons name="radio-button-off" size={20} color={colors.primary} />
               </TouchableOpacity>
             </View>
           </View>
-          <View style={styles.addOnItem}>
+          <View style={[styles.addOnItem, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
             <View style={styles.addOnInfo}>
-              <Ionicons name="water-outline" size={24} color="#666" />
-              <Text style={styles.addOnName}>Ganga Jal</Text>
+              <Ionicons name="water-outline" size={24} color={isDark ? '#AAA' : '#666'} />
+              <Text style={[styles.addOnName, { color: colors.text }]}>Ganga Jal</Text>
             </View>
             <View style={styles.addOnPriceRow}>
-              <Text style={styles.addOnPrice}>+ NPR 100</Text>
+              <Text style={[styles.addOnPrice, { color: isDark ? '#AAA' : '#666' }]}>+ NPR 100</Text>
               <TouchableOpacity>
-                <Ionicons name="radio-button-off" size={20} color={Colors.light.primary} />
+                <Ionicons name="radio-button-off" size={20} color={colors.primary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -135,14 +138,14 @@ export default function ProductDetailScreen() {
       </ScrollView>
 
       {/* Bottom Bar */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: isDark ? '#333' : '#F0F0F0' }]}>
         {cartQuantity > 0 ? (
-           <TouchableOpacity style={styles.viewCartButton} onPress={() => router.push('/(customer)/cart')}>
+           <TouchableOpacity style={[styles.viewCartButton, { backgroundColor: isDark ? '#444' : '#333' }]} onPress={() => router.push('/(customer)/cart')}>
             <Ionicons name="cart" size={20} color="#FFF" />
             <Text style={styles.addToCartText}>View Cart ({cartQuantity})</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
+          <TouchableOpacity style={[styles.addToCartButton, { backgroundColor: colors.primary }]} onPress={handleAddToCart}>
             <Ionicons name="cart-outline" size={20} color="#FFF" />
             <Text style={styles.addToCartText}>Add to Cart</Text>
           </TouchableOpacity>
@@ -155,7 +158,6 @@ export default function ProductDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
   },
   header: {
     flexDirection: 'row',
@@ -171,7 +173,6 @@ const styles = StyleSheet.create({
     height: 250,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF8E1',
     marginHorizontal: 20,
     borderRadius: 20,
     marginBottom: 20,
@@ -180,7 +181,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   category: {
-    color: '#666',
     fontSize: 14,
     marginBottom: 4,
   },
@@ -193,7 +193,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
     flex: 1,
     marginRight: 10,
   },
@@ -203,7 +202,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   ratingText: {
-    color: '#666',
     fontSize: 14,
   },
   priceRow: {
@@ -215,19 +213,16 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.light.primary,
   },
   quantityControl: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
     borderRadius: 30,
     padding: 4,
   },
   quantityControlDisabled: {
      flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
     borderRadius: 30,
     padding: 4,
     paddingHorizontal: 12,
@@ -237,7 +232,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -252,17 +246,14 @@ const styles = StyleSheet.create({
   qtyTextDisabled: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#999',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 8,
     marginTop: 16,
   },
   description: {
-    color: '#666',
     lineHeight: 22,
     fontSize: 14,
   },
@@ -272,7 +263,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   addOnInfo: {
     flexDirection: 'row',
@@ -281,7 +271,6 @@ const styles = StyleSheet.create({
   },
   addOnName: {
     fontSize: 14,
-    color: '#333',
   },
   addOnPriceRow: {
     flexDirection: 'row',
@@ -290,35 +279,29 @@ const styles = StyleSheet.create({
   },
   addOnPrice: {
     fontSize: 14,
-    color: '#666',
   },
   bottomBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFF',
     padding: 20,
     paddingBottom: 30,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
   },
   addToCartButton: {
-    backgroundColor: Colors.light.primary,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 16,
     borderRadius: 30,
     gap: 8,
-    shadowColor: Colors.light.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
   },
   viewCartButton: {
-    backgroundColor: '#333',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',

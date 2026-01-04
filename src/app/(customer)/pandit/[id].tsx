@@ -6,10 +6,13 @@ import { MotiView, MotiText } from 'moti';
 import { Colors } from '@/constants/Colors';
 import { PanditService } from '@/services/pandit.service';
 import { Pandit } from '@/types/pandit';
+import { useTheme } from '@/store/ThemeContext';
 
 export default function PanditProfileScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { colors, theme } = useTheme();
+  const isDark = theme === 'dark';
   const [pandit, setPandit] = useState<Pandit | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -26,17 +29,17 @@ export default function PanditProfileScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.light.primary} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (!pandit) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Pandit not found</Text>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.text }]}>Pandit not found</Text>
+        <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.primary }]}>
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -44,7 +47,7 @@ export default function PanditProfileScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header Image */}
@@ -64,31 +67,31 @@ export default function PanditProfileScreen() {
           from={{ translateY: 50, opacity: 0 }}
           animate={{ translateY: 0, opacity: 1 }}
           transition={{ type: 'spring', damping: 20 }}
-          style={styles.contentContainer}
+          style={[styles.contentContainer, { backgroundColor: colors.background }]}
         >
           {/* Header Info */}
           <View style={styles.headerInfo}>
             <View style={styles.nameRow}>
-              <Text style={styles.name}>{pandit.name}</Text>
-              {pandit.isVerified && <Ionicons name="checkmark-circle" size={20} color={Colors.light.primary} />}
+              <Text style={[styles.name, { color: colors.text }]}>{pandit.name}</Text>
+              {pandit.isVerified && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
             </View>
-            <Text style={styles.location}>
-              <Ionicons name="location" size={14} color="#666" /> {pandit.location}
+            <Text style={[styles.location, { color: isDark ? '#AAA' : '#666' }]}>
+              <Ionicons name="location" size={14} color={isDark ? '#AAA' : '#666'} /> {pandit.location}
             </Text>
             
-            <View style={styles.statsRow}>
+            <View style={[styles.statsRow, { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' }]}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{pandit.rating} <Ionicons name="star" size={12} color="#FFD700" /></Text>
-                <Text style={styles.statLabel}>{pandit.reviewCount} Reviews</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>{pandit.rating} <Ionicons name="star" size={12} color="#FFD700" /></Text>
+                <Text style={[styles.statLabel, { color: isDark ? '#AAA' : '#999' }]}>{pandit.reviewCount} Reviews</Text>
               </View>
-              <View style={styles.statDivider} />
+              <View style={[styles.statDivider, { backgroundColor: isDark ? '#333' : '#F0F0F0' }]} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{pandit.experience}+ Years</Text>
-                <Text style={styles.statLabel}>Experience</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>{pandit.experience}+ Years</Text>
+                <Text style={[styles.statLabel, { color: isDark ? '#AAA' : '#999' }]}>Experience</Text>
               </View>
-              <View style={styles.statDivider} />
+              <View style={[styles.statDivider, { backgroundColor: isDark ? '#333' : '#F0F0F0' }]} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{pandit.isAvailable ? 'Yes' : 'No'}</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>{pandit.isAvailable ? 'Yes' : 'No'}</Text>
                 <Text style={[styles.statLabel, { color: pandit.isAvailable ? 'green' : 'red' }]}>
                   {pandit.isAvailable ? 'Available' : 'Busy'}
                 </Text>
@@ -98,8 +101,8 @@ export default function PanditProfileScreen() {
 
           {/* About Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About</Text>
-            <Text style={styles.description}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>About</Text>
+            <Text style={[styles.description, { color: isDark ? '#CCC' : '#555' }]}>
               {pandit.name} is a highly experienced Vedic scholar specializing in {pandit.specialization.join(', ')}. 
               With over {pandit.experience} years of dedicated service, he has performed numerous ceremonies across {pandit.location}.
               He is fluent in {pandit.languages.join(', ')} and ensures all rituals are performed with utmost devotion and accuracy.
@@ -108,11 +111,11 @@ export default function PanditProfileScreen() {
 
           {/* Specializations */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Specializations</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Specializations</Text>
             <View style={styles.tagsContainer}>
               {pandit.specialization.map((spec, index) => (
-                <View key={index} style={styles.tag}>
-                  <Text style={styles.tagText}>{spec}</Text>
+                <View key={index} style={[styles.tag, { backgroundColor: isDark ? '#332' : '#FFF3E0', borderColor: isDark ? '#443' : '#FFE0B2' }]}>
+                  <Text style={[styles.tagText, { color: isDark ? '#FFB74D' : '#E65100' }]}>{spec}</Text>
                 </View>
               ))}
             </View>
@@ -120,11 +123,11 @@ export default function PanditProfileScreen() {
 
           {/* Languages */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Languages</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Languages</Text>
             <View style={styles.tagsContainer}>
               {pandit.languages.map((lang, index) => (
-                <View key={index} style={styles.langTag}>
-                  <Text style={styles.langTagText}>{lang}</Text>
+                <View key={index} style={[styles.langTag, { backgroundColor: isDark ? '#333' : '#F5F5F5' }]}>
+                  <Text style={[styles.langTagText, { color: isDark ? '#AAA' : '#666' }]}>{lang}</Text>
                 </View>
               ))}
             </View>
@@ -133,25 +136,25 @@ export default function PanditProfileScreen() {
           {/* Reviews Preview (Mock) */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Reviews</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Reviews</Text>
               <TouchableOpacity>
-                <Text style={styles.seeAllText}>See all</Text>
+                <Text style={[styles.seeAllText, { color: colors.primary }]}>See all</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.reviewCard}>
+            <View style={[styles.reviewCard, { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' }]}>
               <View style={styles.reviewHeader}>
                 <View style={styles.reviewerInfo}>
-                  <View style={styles.reviewerAvatar}>
+                  <View style={[styles.reviewerAvatar, { backgroundColor: colors.primary }]}>
                     <Text style={styles.avatarText}>R</Text>
                   </View>
-                  <Text style={styles.reviewerName}>Ramesh K.</Text>
+                  <Text style={[styles.reviewerName, { color: colors.text }]}>Ramesh K.</Text>
                 </View>
-                <View style={styles.reviewRating}>
+                <View style={[styles.reviewRating, { backgroundColor: isDark ? '#332' : '#FFF8E1' }]}>
                   <Ionicons name="star" size={12} color="#FFD700" />
-                  <Text style={styles.reviewRatingText}>5.0</Text>
+                  <Text style={[styles.reviewRatingText, { color: colors.text }]}>5.0</Text>
                 </View>
               </View>
-              <Text style={styles.reviewText}>
+              <Text style={[styles.reviewText, { color: isDark ? '#CCC' : '#555' }]}>
                 Very knowledgeable and punctual. The Griha Pravesh puja was conducted beautifully. Highly recommended!
               </Text>
             </View>
@@ -164,14 +167,14 @@ export default function PanditProfileScreen() {
         from={{ translateY: 100 }}
         animate={{ translateY: 0 }}
         transition={{ type: 'timing', duration: 500, delay: 300 }}
-        style={styles.bottomBar}
+        style={[styles.bottomBar, { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' }]}
       >
         <View>
-          <Text style={styles.priceLabel}>Dakshina starts from</Text>
-          <Text style={styles.priceValue}>NPR {pandit.price}</Text>
+          <Text style={[styles.priceLabel, { color: isDark ? '#AAA' : '#999' }]}>Dakshina starts from</Text>
+          <Text style={[styles.priceValue, { color: colors.primary }]}>NPR {pandit.price}</Text>
         </View>
         <TouchableOpacity 
-          style={[styles.bookButton, !pandit.isAvailable && styles.bookButtonDisabled]}
+          style={[styles.bookButton, { backgroundColor: colors.primary }, !pandit.isAvailable && styles.bookButtonDisabled]}
           onPress={() => router.push(`/(customer)/booking?panditId=${pandit.id}`)}
           disabled={!pandit.isAvailable}
         >
@@ -185,7 +188,6 @@ export default function PanditProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   loadingContainer: {
     flex: 1,
@@ -199,12 +201,10 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 18,
-    color: '#666',
     marginBottom: 16,
   },
   backButton: {
     padding: 12,
-    backgroundColor: Colors.light.primary,
     borderRadius: 8,
   },
   backButtonText: {
@@ -252,7 +252,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     marginTop: -40,
-    backgroundColor: '#FAFAFA',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: 24,
@@ -270,20 +269,16 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
   },
   location: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 16,
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#FFF',
     padding: 16,
     borderRadius: 16,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -296,17 +291,14 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#999',
   },
   statDivider: {
     width: 1,
     height: '100%',
-    backgroundColor: '#F0F0F0',
   },
   section: {
     marginBottom: 24,
@@ -320,16 +312,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 8,
   },
   seeAllText: {
-    color: Colors.light.primary,
     fontWeight: '600',
   },
   description: {
     fontSize: 15,
-    color: '#555',
     lineHeight: 24,
   },
   tagsContainer: {
@@ -338,32 +327,25 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tag: {
-    backgroundColor: '#FFF3E0',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#FFE0B2',
   },
   tagText: {
-    color: '#E65100',
     fontSize: 14,
   },
   langTag: {
-    backgroundColor: '#F5F5F5',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
   langTagText: {
-    color: '#666',
     fontSize: 14,
   },
   reviewCard: {
-    backgroundColor: '#FFF',
     padding: 16,
     borderRadius: 16,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -384,7 +366,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -395,13 +376,11 @@ const styles = StyleSheet.create({
   reviewerName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
   },
   reviewRating: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FFF8E1',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -409,11 +388,9 @@ const styles = StyleSheet.create({
   reviewRatingText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#333',
   },
   reviewText: {
     fontSize: 14,
-    color: '#555',
     lineHeight: 20,
   },
   bottomBar: {
@@ -421,14 +398,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFF',
     paddingHorizontal: 24,
     paddingVertical: 16,
     paddingBottom: 30,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -436,16 +411,13 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     fontSize: 12,
-    color: '#999',
     marginBottom: 2,
   },
   priceValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.light.primary,
   },
   bookButton: {
-    backgroundColor: Colors.light.primary,
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 16,

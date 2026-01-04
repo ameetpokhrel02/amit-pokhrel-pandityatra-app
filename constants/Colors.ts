@@ -2,7 +2,9 @@ export const Colors = {
   light: {
     primary: '#FF6F00', // Saffron
     background: '#F5F5F5', // Cream
+    card: '#FFFFFF',
     text: '#3E2723', // Dark Brown
+    border: '#E5E5EA',
     tint: '#FF6F00',
     icon: '#3E2723',
     tabIconDefault: '#3E2723',
@@ -21,7 +23,9 @@ export const Colors = {
   dark: {
     primary: '#FF6F00',
     background: '#121212',
+    card: '#1E1E1E',
     text: '#FFF8E1',
+    border: '#333333',
     tint: '#FFD700',
     icon: '#FFF8E1',
     tabIconDefault: '#CCC',

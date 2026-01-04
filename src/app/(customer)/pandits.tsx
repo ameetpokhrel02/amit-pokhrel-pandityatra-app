@@ -8,12 +8,15 @@ import { usePanditStore } from '@/store/pandit.store';
 import { PanditCard } from '@/components/pandit/PanditCard';
 import { PanditFilterSheet } from '@/components/pandit/PanditFilterSheet';
 import { Pandit } from '@/types/pandit';
+import { useTheme } from '@/store/ThemeContext';
 
 export default function PanditListingPage() {
   const router = useRouter();
   const { pandits, isLoading, error, fetchPandits, filter, setFilter } = usePanditStore();
   const [isFilterVisible, setFilterVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const { colors, theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchPandits();
@@ -45,37 +48,37 @@ export default function PanditListingPage() {
       transition={{ type: 'timing', duration: 500 }}
       style={styles.emptyState}
     >
-      <View style={styles.emptyIconContainer}>
-        <Ionicons name="search" size={48} color="#CCC" />
+      <View style={[styles.emptyIconContainer, { backgroundColor: isDark ? '#333' : '#F5F5F5' }]}>
+        <Ionicons name="search" size={48} color={isDark ? '#666' : '#CCC'} />
       </View>
-      <Text style={styles.emptyTitle}>No Pandits Found</Text>
-      <Text style={styles.emptySubtitle}>Try adjusting your filters or search terms.</Text>
-      <TouchableOpacity style={styles.clearButton} onPress={() => setFilter({ searchQuery: '', location: undefined, minRating: undefined, availability: undefined })}>
-        <Text style={styles.clearButtonText}>Clear Filters</Text>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>No Pandits Found</Text>
+      <Text style={[styles.emptySubtitle, { color: isDark ? '#AAA' : '#999' }]}>Try adjusting your filters or search terms.</Text>
+      <TouchableOpacity style={[styles.clearButton, { borderColor: colors.primary }]} onPress={() => setFilter({ searchQuery: '', location: undefined, minRating: undefined, availability: undefined })}>
+        <Text style={[styles.clearButtonText, { color: colors.primary }]}>Clear Filters</Text>
       </TouchableOpacity>
     </MotiView>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Sticky Header with Search & Filter */}
       <MotiView
         from={{ translateY: -100, opacity: 0 }}
         animate={{ translateY: 0, opacity: 1 }}
         transition={{ type: 'spring', damping: 20 }}
-        style={styles.header}
+        style={[styles.header, { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' }]}
       >
-        <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={20} color="#999" />
+        <View style={[styles.searchContainer, { backgroundColor: isDark ? '#333' : '#F5F5F5' }]}>
+          <Ionicons name="search-outline" size={20} color={isDark ? '#AAA' : '#999'} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search Pandit, Puja..."
-            placeholderTextColor="#999"
+            placeholderTextColor={isDark ? '#AAA' : '#999'}
             value={filter.searchQuery}
             onChangeText={handleSearch}
           />
         </View>
-        <TouchableOpacity style={styles.filterButton} onPress={() => setFilterVisible(true)}>
+        <TouchableOpacity style={[styles.filterButton, { backgroundColor: colors.primary }]} onPress={() => setFilterVisible(true)}>
           <Ionicons name="options-outline" size={24} color="#FFF" />
         </TouchableOpacity>
       </MotiView>
@@ -83,8 +86,8 @@ export default function PanditListingPage() {
       {/* Content */}
       {isLoading && !refreshing && pandits.length === 0 ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.light.primary} />
-          <Text style={styles.loadingText}>Finding the best Pandits...</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: isDark ? '#AAA' : '#666' }]}>Finding the best Pandits...</Text>
         </View>
       ) : (
         <FlatList
@@ -94,7 +97,7 @@ export default function PanditListingPage() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.light.primary]} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />
           }
           ListEmptyComponent={!isLoading ? renderEmptyState : null}
         />
@@ -112,16 +115,13 @@ export default function PanditListingPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFF',
     zIndex: 10,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -131,7 +131,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 46,
@@ -141,13 +140,11 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     fontSize: 16,
-    color: '#333',
   },
   filterButton: {
     width: 46,
     height: 46,
     borderRadius: 12,
-    backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -163,7 +160,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#666',
   },
   emptyState: {
     alignItems: 'center',
@@ -174,7 +170,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -182,12 +177,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#999',
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -196,10 +189,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Colors.light.primary,
   },
   clearButtonText: {
-    color: Colors.light.primary,
     fontWeight: '600',
   },
 });

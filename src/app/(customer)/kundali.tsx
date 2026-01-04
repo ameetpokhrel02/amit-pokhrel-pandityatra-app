@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platfo
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { MotiView } from 'moti';
+import { useTheme } from '@/store/ThemeContext';
 
 export default function KundaliScreen() {
   const router = useRouter();
@@ -13,15 +14,17 @@ export default function KundaliScreen() {
     place: '',
     gender: ''
   });
+  const { colors, theme } = useTheme();
+  const isDark = theme === 'dark';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isDark ? colors.background : '#fff7ed' }]}>
         {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: isDark ? colors.background : '#fff7ed' }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Offline Kundali</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Offline Kundali</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -37,12 +40,12 @@ export default function KundaliScreen() {
                     loop: true,
                     repeatReverse: false,
                 }}
-                style={styles.heroIconContainer}
+                style={[styles.heroIconContainer, { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' }]}
             >
                 <Ionicons name="planet-outline" size={64} color="#f97316" />
             </MotiView>
-            <Text style={styles.heroTitle}>Offline Kundali – Your Birth Chart, Private & Secure</Text>
-            <Text style={styles.heroSubtitle}>Generate your Kundali without internet. Your data stays on your device.</Text>
+            <Text style={[styles.heroTitle, { color: colors.text }]}>Offline Kundali – Your Birth Chart, Private & Secure</Text>
+            <Text style={[styles.heroSubtitle, { color: isDark ? '#AAA' : '#666' }]}>Generate your Kundali without internet. Your data stays on your device.</Text>
             <MotiView
                 from={{ scale: 1 }}
                 animate={{ scale: 1.05 }}
@@ -60,39 +63,40 @@ export default function KundaliScreen() {
 
         {/* 2. What Is Offline Kundali? */}
         <View style={styles.section}>
-            <Text style={styles.sectionHeader}>What Is Offline Kundali?</Text>
-            <Text style={styles.sectionText}>
+            <Text style={[styles.sectionHeader, { color: colors.text }]}>What Is Offline Kundali?</Text>
+            <Text style={[styles.sectionText, { color: isDark ? '#AAA' : '#555' }]}>
                 Offline Kundali generates your birth chart using Vedic astrology algorithms directly on your device. No internet required. No data sent to servers.
             </Text>
             <View style={styles.featureRow}>
-                <View style={styles.featureItem}>
+                <View style={[styles.featureItem, { backgroundColor: colors.card }]}>
                     <Ionicons name="cloud-offline-outline" size={24} color="#f97316" />
-                    <Text style={styles.featureText}>Works Offline</Text>
+                    <Text style={[styles.featureText, { color: colors.text }]}>Works Offline</Text>
                 </View>
-                <View style={styles.featureItem}>
+                <View style={[styles.featureItem, { backgroundColor: colors.card }]}>
                     <Ionicons name="lock-closed-outline" size={24} color="#f97316" />
-                    <Text style={styles.featureText}>100% Private</Text>
+                    <Text style={[styles.featureText, { color: colors.text }]}>100% Private</Text>
                 </View>
-                <View style={styles.featureItem}>
+                <View style={[styles.featureItem, { backgroundColor: colors.card }]}>
                     <Ionicons name="document-text-outline" size={24} color="#f97316" />
-                    <Text style={styles.featureText}>PDF Download</Text>
+                    <Text style={[styles.featureText, { color: colors.text }]}>PDF Download</Text>
                 </View>
-                <View style={styles.featureItem}>
+                <View style={[styles.featureItem, { backgroundColor: colors.card }]}>
                     <Ionicons name="planet-outline" size={24} color="#f97316" />
-                    <Text style={styles.featureText}>Vedic Astrology</Text>
+                    <Text style={[styles.featureText, { color: colors.text }]}>Vedic Astrology</Text>
                 </View>
             </View>
         </View>
 
         {/* 3. Kundali Input Form */}
-        <View style={styles.formCard}>
-            <Text style={styles.cardTitle}>Enter Birth Details</Text>
+        <View style={[styles.formCard, { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' }]}>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Enter Birth Details</Text>
             
             <View style={styles.inputGroup}>
-                <Text style={styles.label}>Full Name</Text>
+                <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Full Name</Text>
                 <TextInput 
-                    style={styles.input} 
+                    style={[styles.input, { backgroundColor: isDark ? '#333' : '#f9fafb', borderColor: isDark ? '#444' : '#e5e7eb', color: colors.text }]} 
                     placeholder="Enter your full name" 
+                    placeholderTextColor={isDark ? '#AAA' : '#999'}
                     value={formData.name}
                     onChangeText={(t) => setFormData({...formData, name: t})}
                 />
@@ -100,36 +104,39 @@ export default function KundaliScreen() {
 
             <View style={styles.row}>
                 <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                    <Text style={styles.label}>Date of Birth</Text>
-                    <View style={styles.dateInputContainer}>
+                    <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Date of Birth</Text>
+                    <View style={[styles.dateInputContainer, { backgroundColor: isDark ? '#333' : '#f9fafb', borderColor: isDark ? '#444' : '#e5e7eb' }]}>
                         <TextInput 
-                            style={styles.dateInput} 
+                            style={[styles.dateInput, { color: colors.text }]} 
                             placeholder="DD/MM/YYYY" 
+                            placeholderTextColor={isDark ? '#AAA' : '#999'}
                             value={formData.dob}
                             onChangeText={(t) => setFormData({...formData, dob: t})}
                         />
-                        <Ionicons name="calendar-outline" size={20} color="#666" />
+                        <Ionicons name="calendar-outline" size={20} color={isDark ? '#AAA' : '#666'} />
                     </View>
                 </View>
                 <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                    <Text style={styles.label}>Time of Birth</Text>
-                    <View style={styles.dateInputContainer}>
+                    <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Time of Birth</Text>
+                    <View style={[styles.dateInputContainer, { backgroundColor: isDark ? '#333' : '#f9fafb', borderColor: isDark ? '#444' : '#e5e7eb' }]}>
                         <TextInput 
-                            style={styles.dateInput} 
+                            style={[styles.dateInput, { color: colors.text }]} 
                             placeholder="HH:MM" 
+                            placeholderTextColor={isDark ? '#AAA' : '#999'}
                             value={formData.tob}
                             onChangeText={(t) => setFormData({...formData, tob: t})}
                         />
-                        <Ionicons name="time-outline" size={20} color="#666" />
+                        <Ionicons name="time-outline" size={20} color={isDark ? '#AAA' : '#666'} />
                     </View>
                 </View>
             </View>
 
             <View style={styles.inputGroup}>
-                <Text style={styles.label}>Place of Birth</Text>
+                <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Place of Birth</Text>
                 <TextInput 
-                    style={styles.input} 
+                    style={[styles.input, { backgroundColor: isDark ? '#333' : '#f9fafb', borderColor: isDark ? '#444' : '#e5e7eb', color: colors.text }]} 
                     placeholder="City, Country" 
+                    placeholderTextColor={isDark ? '#AAA' : '#999'}
                     value={formData.place}
                     onChangeText={(t) => setFormData({...formData, place: t})}
                 />
@@ -142,47 +149,47 @@ export default function KundaliScreen() {
 
         {/* 4. What You Will Get */}
         <View style={styles.section}>
-            <Text style={styles.sectionHeader}>What You Will Get</Text>
-            <View style={styles.previewCard}>
+            <Text style={[styles.sectionHeader, { color: colors.text }]}>What You Will Get</Text>
+            <View style={[styles.previewCard, { backgroundColor: colors.card }]}>
                 <View style={styles.previewHeader}>
                     <Ionicons name="pie-chart-outline" size={20} color="#fbbf24" />
-                    <Text style={styles.previewTitle}>Kundali Components</Text>
+                    <Text style={[styles.previewTitle, { color: colors.text }]}>Kundali Components</Text>
                 </View>
-                <Text style={styles.previewList}>• Lagna (Ascendant)</Text>
-                <Text style={styles.previewList}>• Rashi Chart</Text>
-                <Text style={styles.previewList}>• Navamsa Chart</Text>
-                <Text style={styles.previewList}>• Planet Positions</Text>
+                <Text style={[styles.previewList, { color: isDark ? '#AAA' : '#666' }]}>• Lagna (Ascendant)</Text>
+                <Text style={[styles.previewList, { color: isDark ? '#AAA' : '#666' }]}>• Rashi Chart</Text>
+                <Text style={[styles.previewList, { color: isDark ? '#AAA' : '#666' }]}>• Navamsa Chart</Text>
+                <Text style={[styles.previewList, { color: isDark ? '#AAA' : '#666' }]}>• Planet Positions</Text>
             </View>
-            <View style={styles.previewCard}>
+            <View style={[styles.previewCard, { backgroundColor: colors.card }]}>
                 <View style={styles.previewHeader}>
                     <Ionicons name="sparkles-outline" size={20} color="#fbbf24" />
-                    <Text style={styles.previewTitle}>Predictions</Text>
+                    <Text style={[styles.previewTitle, { color: colors.text }]}>Predictions</Text>
                 </View>
-                <Text style={styles.previewList}>• Personality Traits</Text>
-                <Text style={styles.previewList}>• Career Indications</Text>
-                <Text style={styles.previewList}>• Marriage Insights</Text>
-                <Text style={styles.previewList}>• Auspicious Timings</Text>
+                <Text style={[styles.previewList, { color: isDark ? '#AAA' : '#666' }]}>• Personality Traits</Text>
+                <Text style={[styles.previewList, { color: isDark ? '#AAA' : '#666' }]}>• Career Indications</Text>
+                <Text style={[styles.previewList, { color: isDark ? '#AAA' : '#666' }]}>• Marriage Insights</Text>
+                <Text style={[styles.previewList, { color: isDark ? '#AAA' : '#666' }]}>• Auspicious Timings</Text>
             </View>
         </View>
 
         {/* 5. Privacy Assurance */}
-        <View style={styles.privacyCard}>
+        <View style={[styles.privacyCard, { backgroundColor: colors.card, borderColor: isDark ? '#444' : '#fed7aa' }]}>
             <Ionicons name="lock-closed" size={32} color="#f97316" />
-            <Text style={styles.privacyTitle}>Your data never leaves your phone</Text>
-            <Text style={styles.privacyText}>Kundali is generated offline using secure algorithms. No upload. No tracking. No ads.</Text>
+            <Text style={[styles.privacyTitle, { color: colors.text }]}>Your data never leaves your phone</Text>
+            <Text style={[styles.privacyText, { color: isDark ? '#AAA' : '#666' }]}>Kundali is generated offline using secure algorithms. No upload. No tracking. No ads.</Text>
         </View>
 
         {/* 7. Optional Add-ons */}
         <View style={styles.addonsContainer}>
-            <TouchableOpacity style={styles.addonCard}>
-                <Ionicons name="people-outline" size={24} color="#333" />
-                <Text style={styles.addonText}>Book Pandit for Explanation</Text>
-                <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            <TouchableOpacity style={[styles.addonCard, { backgroundColor: colors.card }]}>
+                <Ionicons name="people-outline" size={24} color={colors.text} />
+                <Text style={[styles.addonText, { color: colors.text }]}>Book Pandit for Explanation</Text>
+                <Ionicons name="chevron-forward" size={20} color={isDark ? '#AAA' : '#ccc'} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.addonCard}>
-                <Ionicons name="heart-outline" size={24} color="#333" />
-                <Text style={styles.addonText}>Match Kundali for Marriage</Text>
-                <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            <TouchableOpacity style={[styles.addonCard, { backgroundColor: colors.card }]}>
+                <Ionicons name="heart-outline" size={24} color={colors.text} />
+                <Text style={[styles.addonText, { color: colors.text }]}>Match Kundali for Marriage</Text>
+                <Ionicons name="chevron-forward" size={20} color={isDark ? '#AAA' : '#ccc'} />
             </TouchableOpacity>
         </View>
 
@@ -194,7 +201,6 @@ export default function KundaliScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff7ed', // Cream background
     },
     header: {
         flexDirection: 'row',
@@ -203,7 +209,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: 50,
         paddingBottom: 16,
-        backgroundColor: '#fff7ed',
     },
     backButton: {
         padding: 4,
@@ -211,7 +216,6 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#333',
     },
     content: {
         flex: 1,
@@ -226,13 +230,11 @@ const styles = StyleSheet.create({
     heroIconContainer: {
         width: 100,
         height: 100,
-        backgroundColor: '#fff',
         borderRadius: 50,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,
         elevation: 2,
-        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
@@ -240,14 +242,12 @@ const styles = StyleSheet.create({
     heroTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#333',
         textAlign: 'center',
         marginBottom: 8,
         fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif',
     },
     heroSubtitle: {
         fontSize: 16,
-        color: '#666',
         textAlign: 'center',
         marginBottom: 24,
         lineHeight: 22,
@@ -270,13 +270,11 @@ const styles = StyleSheet.create({
     sectionHeader: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#333',
         marginBottom: 12,
         fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif',
     },
     sectionText: {
         fontSize: 15,
-        color: '#555',
         lineHeight: 22,
         marginBottom: 20,
     },
@@ -288,7 +286,6 @@ const styles = StyleSheet.create({
     },
     featureItem: {
         width: '45%',
-        backgroundColor: '#fff',
         padding: 16,
         borderRadius: 12,
         alignItems: 'center',
@@ -298,16 +295,13 @@ const styles = StyleSheet.create({
         marginTop: 8,
         fontSize: 13,
         fontWeight: '500',
-        color: '#333',
         textAlign: 'center',
     },
     formCard: {
-        backgroundColor: '#fff',
         margin: 20,
         padding: 20,
         borderRadius: 16,
         elevation: 4,
-        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
@@ -315,7 +309,6 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#333',
         marginBottom: 20,
     },
     inputGroup: {
@@ -324,17 +317,13 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#666',
         marginBottom: 8,
     },
     input: {
-        backgroundColor: '#f9fafb',
         borderWidth: 1,
-        borderColor: '#e5e7eb',
         borderRadius: 8,
         padding: 12,
         fontSize: 16,
-        color: '#333',
     },
     row: {
         flexDirection: 'row',
@@ -342,9 +331,7 @@ const styles = StyleSheet.create({
     dateInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f9fafb',
         borderWidth: 1,
-        borderColor: '#e5e7eb',
         borderRadius: 8,
         paddingHorizontal: 12,
     },
@@ -352,7 +339,6 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: 12,
         fontSize: 16,
-        color: '#333',
     },
     generateButton: {
         backgroundColor: '#f97316',
@@ -367,7 +353,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     previewCard: {
-        backgroundColor: '#fff',
         padding: 16,
         borderRadius: 12,
         marginBottom: 12,
@@ -383,34 +368,28 @@ const styles = StyleSheet.create({
     previewTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#333',
     },
     previewList: {
         fontSize: 14,
-        color: '#666',
         marginLeft: 28,
         marginBottom: 4,
     },
     privacyCard: {
-        backgroundColor: '#fff',
         margin: 20,
         padding: 24,
         borderRadius: 16,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#fed7aa',
     },
     privacyTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#333',
         marginTop: 12,
         marginBottom: 8,
         textAlign: 'center',
     },
     privacyText: {
         fontSize: 14,
-        color: '#666',
         textAlign: 'center',
         lineHeight: 20,
     },
@@ -421,7 +400,6 @@ const styles = StyleSheet.create({
     addonCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
         padding: 16,
         borderRadius: 12,
         justifyContent: 'space-between',
@@ -431,6 +409,5 @@ const styles = StyleSheet.create({
         marginLeft: 12,
         fontSize: 15,
         fontWeight: '500',
-        color: '#333',
     },
 });

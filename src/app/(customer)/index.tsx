@@ -5,6 +5,7 @@ import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { useCart } from '@/store/CartContext';
 import { useUser } from '@/store/UserContext';
+import { useTheme } from '@/store/ThemeContext';
 import { PRODUCTS } from '@/data/products';
 import { MotiView, MotiText } from 'moti';
 import { DailyPanchang } from '@/components/home/DailyPanchang';
@@ -24,21 +25,23 @@ export default function CustomerHomeScreen() {
   const router = useRouter();
   const { addToCart, updateQuantity, getItemCount } = useCart();
   const { user } = useUser();
+  const { colors, theme } = useTheme();
   const { t } = useTranslation();
+  const isDark = theme === 'dark';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity>
-            <Ionicons name="menu-outline" size={28} color="#333" />
+            <Ionicons name="menu-outline" size={28} color={colors.text} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.push('/(customer)/profile')}>
              {user?.photoUri ? (
                <Image source={{ uri: user.photoUri }} style={styles.profileImage} />
              ) : (
-               <View style={styles.profileImagePlaceholder}>
+               <View style={[styles.profileImagePlaceholder, { backgroundColor: colors.primary }]}>
                   <Text style={styles.profileInitials}>{user?.name?.[0]?.toUpperCase() || 'G'}</Text>
                </View>
              )}
@@ -52,8 +55,8 @@ export default function CustomerHomeScreen() {
           transition={{ type: 'timing', duration: 500 }}
           style={styles.greetingSection}
         >
-          <Text style={styles.greetingTitle}>{t('welcome')}, {user?.name || 'Guest'}!</Text>
-          <Text style={styles.greetingSubtitle}>{t('greetingSubtitle')}</Text>
+          <Text style={[styles.greetingTitle, { color: colors.text }]}>{t('welcome')}, {user?.name || 'Guest'}!</Text>
+          <Text style={[styles.greetingSubtitle, { color: isDark ? '#AAA' : '#666' }]}>{t('greetingSubtitle')}</Text>
         </MotiView>
 
         {/* Daily Panchang Widget */}
@@ -64,25 +67,54 @@ export default function CustomerHomeScreen() {
           from={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'timing', duration: 500, delay: 100 }}
-          style={styles.searchContainer}
+          style={[styles.searchContainer, { backgroundColor: colors.inputBackground }]}
         >
-          <Ionicons name="search-outline" size={20} color="#999" />
+          <Ionicons name="search-outline" size={20} color={colors.placeholder} />
           <TextInput 
             placeholder={t('searchPlaceholder')} 
-            style={styles.searchInput}
-            placeholderTextColor="#999"
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholderTextColor={colors.placeholder}
           />
           <TouchableOpacity style={styles.filterButton}>
-            <Ionicons name="options-outline" size={20} color={Colors.light.primary} />
+            <Ionicons name="options-outline" size={20} color={colors.primary} />
           </TouchableOpacity>
         </MotiView>
 
         {/* Categories */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
-          <CategoryItem index={0} icon="flame" label={t('categories.puja')} active onPress={() => router.push('/(customer)/pandits')} />
-          <CategoryItem index={1} icon="basket" label={t('categories.samagri')} onPress={() => router.push('/(customer)/shop')} />
-          <CategoryItem index={2} icon="people" label={t('categories.pandits')} onPress={() => router.push('/(customer)/pandits')} />
-          <CategoryItem index={3} icon="planet" label={t('categories.kundali')} onPress={() => router.push('/(customer)/kundali')} />
+          <CategoryItem 
+            index={0} 
+            icon="flame" 
+            label={t('categories.puja')} 
+            active 
+            onPress={() => router.push('/(customer)/pandits')} 
+            colors={colors}
+            isDark={isDark}
+          />
+          <CategoryItem 
+            index={1} 
+            icon="basket" 
+            label={t('categories.samagri')} 
+            onPress={() => router.push('/(customer)/shop')} 
+            colors={colors}
+            isDark={isDark}
+          />
+          <CategoryItem 
+            index={2} 
+            icon="people" 
+            label={t('categories.pandits')} 
+            onPress={() => router.push('/(customer)/pandits')} 
+            colors={colors}
+            isDark={isDark}
+          />
+          <CategoryItem 
+            index={3} 
+            icon="planet" 
+            label={t('categories.kundali')} 
+            onPress={() => router.push('/(customer)/kundali')} 
+            colors={colors}
+            isDark={isDark}
+          />
         </ScrollView>
 
         {/* Daily Quote Widget */}
@@ -90,9 +122,9 @@ export default function CustomerHomeScreen() {
 
         {/* Recommended Products */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('recommendedSamagri')}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('recommendedSamagri')}</Text>
           <TouchableOpacity onPress={() => router.push('/(customer)/shop')}>
-            <Text style={styles.seeAllText}>{t('seeAll')}</Text>
+            <Text style={[styles.seeAllText, { color: colors.primary }]}>{t('seeAll')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -103,18 +135,18 @@ export default function CustomerHomeScreen() {
             return (
               <TouchableOpacity 
                 key={item.id} 
-                style={styles.productCard}
+                style={[styles.productCard, { backgroundColor: colors.card }]}
                 onPress={() => router.push(`/(customer)/shop/${item.id}`)}
               >
-                <View style={styles.productImage}>
-                  <Ionicons name={item.image as any} size={40} color={Colors.light.primary} />
+                <View style={[styles.productImage, { backgroundColor: isDark ? '#333' : '#FFF8E1' }]}>
+                  <Ionicons name={item.image as any} size={40} color={colors.primary} />
                 </View>
-                <Text style={styles.productName} numberOfLines={1}>{item.name}</Text>
+                <Text style={[styles.productName, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
                 <View style={styles.productFooter}>
-                  <Text style={styles.productPrice}>NPR {item.price}</Text>
+                  <Text style={[styles.productPrice, { color: colors.primary }]}>NPR {item.price}</Text>
                   
                   {quantity > 0 ? (
-                    <View style={styles.quantityControl}>
+                    <View style={[styles.quantityControl, { backgroundColor: colors.primary }]}>
                       <TouchableOpacity 
                         style={styles.qtyButton} 
                         onPress={(e) => {
@@ -137,7 +169,7 @@ export default function CustomerHomeScreen() {
                     </View>
                   ) : (
                     <TouchableOpacity 
-                      style={styles.addButton}
+                      style={[styles.addButton, { backgroundColor: colors.primary }]}
                       onPress={(e) => {
                         e.stopPropagation();
                         addToCart(item);
@@ -154,27 +186,31 @@ export default function CustomerHomeScreen() {
 
         {/* Popular Pandits */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Most Popular Pandits</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Most Popular Pandits</Text>
           <TouchableOpacity onPress={() => router.push('/(customer)/pandits')}>
-            <Text style={styles.seeAllText}>See all</Text>
+            <Text style={[styles.seeAllText, { color: colors.primary }]}>See all</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.verticalList}>
           {POPULAR_PANDITS.map((pandit) => (
-            <TouchableOpacity key={pandit.id} style={styles.panditCard} onPress={() => router.push('/(customer)/pandits')}>
-              <View style={styles.panditImage}>
-                <Ionicons name="person" size={24} color="#666" />
+            <TouchableOpacity 
+              key={pandit.id} 
+              style={[styles.panditCard, { backgroundColor: colors.card }]} 
+              onPress={() => router.push('/(customer)/pandits')}
+            >
+              <View style={[styles.panditImage, { backgroundColor: isDark ? '#333' : '#F5F5F5' }]}>
+                <Ionicons name="person" size={24} color={isDark ? '#AAA' : '#666'} />
               </View>
               <View style={styles.panditInfo}>
-                <Text style={styles.panditName}>{pandit.name}</Text>
-                <Text style={styles.panditLocation}>{pandit.location}</Text>
+                <Text style={[styles.panditName, { color: colors.text }]}>{pandit.name}</Text>
+                <Text style={[styles.panditLocation, { color: isDark ? '#AAA' : '#666' }]}>{pandit.location}</Text>
                 <View style={styles.ratingRow}>
                   <Ionicons name="star" size={14} color="#FFD700" />
-                  <Text style={styles.ratingValue}>{pandit.rating}</Text>
+                  <Text style={[styles.ratingValue, { color: colors.text }]}>{pandit.rating}</Text>
                 </View>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#CCC" />
+              <Ionicons name="chevron-forward" size={20} color={isDark ? '#555' : '#CCC'} />
             </TouchableOpacity>
           ))}
         </View>
@@ -184,7 +220,23 @@ export default function CustomerHomeScreen() {
   );
 }
 
-function CategoryItem({ icon, label, active, onPress, index }: { icon: any, label: string, active?: boolean, onPress: () => void, index: number }) {
+function CategoryItem({ 
+  icon, 
+  label, 
+  active, 
+  onPress, 
+  index,
+  colors,
+  isDark
+}: { 
+  icon: any, 
+  label: string, 
+  active?: boolean, 
+  onPress: () => void, 
+  index: number,
+  colors: any,
+  isDark: boolean
+}) {
   return (
     <MotiView
       from={{ opacity: 0, scale: 0.8, translateY: 20 }}
@@ -195,11 +247,32 @@ function CategoryItem({ icon, label, active, onPress, index }: { icon: any, labe
         delay: index * 100,
       }}
     >
-      <TouchableOpacity style={[styles.categoryItem, active && styles.categoryItemActive]} onPress={onPress}>
-        <View style={[styles.categoryIcon, active && styles.categoryIconActive]}>
-          <Ionicons name={icon} size={24} color={active ? '#FFF' : '#666'} />
+      <TouchableOpacity 
+        style={[
+          styles.categoryItem, 
+          { 
+            backgroundColor: colors.card,
+            borderColor: isDark ? '#333' : '#F0F0F0'
+          },
+          active && { 
+            backgroundColor: colors.primary,
+            borderColor: colors.primary,
+          }
+        ]} 
+        onPress={onPress}
+      >
+        <View style={[
+          styles.categoryIcon, 
+          { backgroundColor: isDark ? '#333' : '#F5F5F5' },
+          active && styles.categoryIconActive
+        ]}>
+          <Ionicons name={icon} size={24} color={active ? '#FFF' : (isDark ? '#AAA' : '#666')} />
         </View>
-        <Text style={[styles.categoryLabel, active && styles.categoryLabelActive]}>{label}</Text>
+        <Text style={[
+          styles.categoryLabel, 
+          { color: isDark ? '#AAA' : '#666' },
+          active && styles.categoryLabelActive
+        ]}>{label}</Text>
       </TouchableOpacity>
     </MotiView>
   );
@@ -208,7 +281,6 @@ function CategoryItem({ icon, label, active, onPress, index }: { icon: any, labe
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   scrollContent: {
     paddingBottom: 100,
@@ -225,7 +297,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -246,17 +317,14 @@ const styles = StyleSheet.create({
   greetingTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 4,
   },
   greetingSubtitle: {
     fontSize: 16,
-    color: '#666',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
     marginHorizontal: 20,
     paddingHorizontal: 16,
     height: 50,
@@ -272,7 +340,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
     fontSize: 16,
-    color: '#333',
   },
   filterButton: {
     padding: 4,
@@ -284,24 +351,17 @@ const styles = StyleSheet.create({
   categoryItem: {
     alignItems: 'center',
     marginRight: 20,
-    backgroundColor: '#FFF',
     padding: 8,
     borderRadius: 30,
     paddingHorizontal: 16,
     flexDirection: 'row',
     gap: 8,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  categoryItemActive: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
   },
   categoryIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -311,7 +371,6 @@ const styles = StyleSheet.create({
   categoryLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
   },
   categoryLabelActive: {
     color: '#FFF',
@@ -326,11 +385,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
   },
   seeAllText: {
     fontSize: 14,
-    color: Colors.light.primary,
     fontWeight: '600',
   },
   horizontalList: {
@@ -338,7 +395,6 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   productCard: {
-    backgroundColor: '#FFF',
     width: 160,
     padding: 12,
     borderRadius: 16,
@@ -351,7 +407,6 @@ const styles = StyleSheet.create({
   },
   productImage: {
     height: 100,
-    backgroundColor: '#FFF8E1',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -360,7 +415,6 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 8,
   },
   productFooter: {
@@ -372,20 +426,17 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: Colors.light.primary,
   },
   addButton: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   quantityControl: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.primary,
     borderRadius: 12,
     padding: 2,
   },
@@ -408,7 +459,6 @@ const styles = StyleSheet.create({
   panditCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
     padding: 16,
     borderRadius: 16,
     shadowColor: '#000',
@@ -421,7 +471,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -432,12 +481,10 @@ const styles = StyleSheet.create({
   panditName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 4,
   },
   panditLocation: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
   },
   ratingRow: {
@@ -448,6 +495,5 @@ const styles = StyleSheet.create({
   ratingValue: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#333',
   },
 });

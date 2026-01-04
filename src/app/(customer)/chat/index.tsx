@@ -5,9 +5,12 @@ import { Colors } from '@/constants/Colors';
 import { ChatService } from '@/services/chat.service';
 import { ChatRoom } from '@/types/chat';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useTheme } from '@/store/ThemeContext';
 
 export default function ChatListScreen() {
   const router = useRouter();
+  const { colors, theme } = useTheme();
+  const isDark = theme === 'dark';
   const [chats, setChats] = useState<ChatRoom[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,33 +34,33 @@ export default function ChatListScreen() {
     
     return (
       <TouchableOpacity 
-        style={styles.chatItem} 
+        style={[styles.chatItem, { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' }]} 
         onPress={() => router.push(`/(customer)/chat/${item.id}` as any)}
       >
         <View style={styles.avatarContainer}>
           {otherParticipant?.avatar ? (
             <Image source={{ uri: otherParticipant.avatar }} style={styles.avatar} />
           ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
               <Text style={styles.avatarText}>{otherParticipant?.name.charAt(0)}</Text>
             </View>
           )}
-          {item.unreadCount > 0 && <View style={styles.badge} />}
+          {item.unreadCount > 0 && <View style={[styles.badge, { borderColor: colors.card }]} />}
         </View>
         
         <View style={styles.contentContainer}>
           <View style={styles.headerRow}>
-            <Text style={styles.name}>{otherParticipant?.name}</Text>
-            <Text style={styles.time}>
+            <Text style={[styles.name, { color: colors.text }]}>{otherParticipant?.name}</Text>
+            <Text style={[styles.time, { color: isDark ? '#AAA' : '#999' }]}>
               {item.lastMessage ? new Date(item.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
             </Text>
           </View>
           
-          <Text style={styles.contextText}>
+          <Text style={[styles.contextText, { color: colors.primary }]}>
             {item.context?.ritualType} • {item.context?.location}
           </Text>
           
-          <Text style={[styles.messagePreview, item.unreadCount > 0 && styles.unreadMessage]} numberOfLines={1}>
+          <Text style={[styles.messagePreview, { color: isDark ? '#AAA' : '#666' }, item.unreadCount > 0 && { color: colors.text, fontWeight: '600' }]} numberOfLines={1}>
             {item.lastMessage?.text}
           </Text>
         </View>
@@ -66,9 +69,9 @@ export default function ChatListScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Messages</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: isDark ? '#333' : '#f0f0f0' }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Messages</Text>
       </View>
       
       <FlatList
@@ -78,8 +81,8 @@ export default function ChatListScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <IconSymbol name="message.fill" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>No conversations yet</Text>
+            <IconSymbol name="message.fill" size={48} color={isDark ? '#666' : '#ccc'} />
+            <Text style={[styles.emptyText, { color: isDark ? '#AAA' : '#999' }]}>No conversations yet</Text>
           </View>
         }
       />
@@ -90,20 +93,16 @@ export default function ChatListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
   header: {
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
-    backgroundColor: Colors.light.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.light.text,
   },
   listContent: {
     padding: 16,
@@ -111,10 +110,8 @@ const styles = StyleSheet.create({
   chatItem: {
     flexDirection: 'row',
     padding: 16,
-    backgroundColor: Colors.light.white,
     borderRadius: 16,
     marginBottom: 12,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -133,7 +130,6 @@ const styles = StyleSheet.create({
   avatarPlaceholder: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.light.primary,
   },
   avatarText: {
     color: 'white',
@@ -149,7 +145,6 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: '#FF3B30',
     borderWidth: 2,
-    borderColor: 'white',
   },
   contentContainer: {
     flex: 1,
@@ -164,25 +159,17 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.light.text,
   },
   time: {
     fontSize: 12,
-    color: '#999',
   },
   contextText: {
     fontSize: 12,
-    color: Colors.light.primary,
     marginBottom: 4,
     fontWeight: '500',
   },
   messagePreview: {
     fontSize: 14,
-    color: '#666',
-  },
-  unreadMessage: {
-    color: Colors.light.text,
-    fontWeight: '600',
   },
   emptyContainer: {
     alignItems: 'center',
@@ -191,7 +178,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: 16,
-    color: '#999',
     fontSize: 16,
   },
 });

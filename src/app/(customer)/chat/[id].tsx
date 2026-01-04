@@ -6,10 +6,13 @@ import { Colors } from '@/constants/Colors';
 import { ChatService } from '@/services/chat.service';
 import { ChatMessage, ChatRoom } from '@/types/chat';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useTheme } from '@/store/ThemeContext';
 
 export default function ChatRoomScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { colors, theme } = useTheme();
+  const isDark = theme === 'dark';
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(true);
@@ -70,9 +73,9 @@ export default function ChatRoomScreen() {
   const renderMessage = ({ item }: { item: ChatMessage }) => {
     if (item.type === 'system') {
       return (
-        <View style={styles.systemMessageContainer}>
-          <IconSymbol name="info.circle" size={16} color="#666" />
-          <Text style={styles.systemMessageText}>{item.text}</Text>
+        <View style={[styles.systemMessageContainer, { backgroundColor: isDark ? '#333' : '#F5F5F5' }]}>
+          <IconSymbol name="info.circle" size={16} color={isDark ? '#AAA' : '#666'} />
+          <Text style={[styles.systemMessageText, { color: isDark ? '#AAA' : '#666' }]}>{item.text}</Text>
         </View>
       );
     }
@@ -82,17 +85,18 @@ export default function ChatRoomScreen() {
     return (
       <View style={[
         styles.messageBubble, 
+        isMe ? { backgroundColor: colors.primary, borderBottomRightRadius: 4 } : { backgroundColor: isDark ? '#333' : '#F0F0F0', borderBottomLeftRadius: 4 },
         isMe ? styles.myMessage : styles.theirMessage
       ]}>
         <Text style={[
           styles.messageText,
-          isMe ? styles.myMessageText : styles.theirMessageText
+          isMe ? styles.myMessageText : { color: colors.text }
         ]}>
           {item.text}
         </Text>
         <Text style={[
           styles.timestamp,
-          isMe ? styles.myTimestamp : styles.theirTimestamp
+          isMe ? styles.myTimestamp : { color: isDark ? '#AAA' : '#999' }
         ]}>
           {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </Text>
@@ -102,19 +106,19 @@ export default function ChatRoomScreen() {
 
   return (
     <KeyboardAvoidingView 
-      style={styles.container} 
+      style={[styles.container, { backgroundColor: colors.background }]} 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: isDark ? '#333' : '#f0f0f0' }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <IconSymbol name="chevron.left" size={28} color={Colors.light.text} />
+          <IconSymbol name="chevron.left" size={28} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>Pandit Ram Acharya</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Pandit Ram Acharya</Text>
           <View style={styles.verifiedBadge}>
-            <IconSymbol name="checkmark.circle.fill" size={14} color={Colors.light.primary} />
-            <Text style={styles.verifiedText}>Verified Pandit</Text>
+            <IconSymbol name="checkmark.circle.fill" size={14} color={colors.primary} />
+            <Text style={[styles.verifiedText, { color: colors.primary }]}>Verified Pandit</Text>
           </View>
         </View>
       </View>
@@ -129,34 +133,34 @@ export default function ChatRoomScreen() {
       />
 
       {aiSuggestion && (
-        <View style={styles.suggestionContainer}>
+        <View style={[styles.suggestionContainer, { backgroundColor: isDark ? '#332' : '#FFF9F0', borderTopColor: isDark ? '#443' : '#FFE0B2' }]}>
           <View style={styles.suggestionHeader}>
-            <IconSymbol name="sparkles" size={16} color={Colors.light.primary} />
-            <Text style={styles.suggestionTitle}>AI Suggestion</Text>
+            <IconSymbol name="sparkles" size={16} color={colors.primary} />
+            <Text style={[styles.suggestionTitle, { color: colors.primary }]}>AI Suggestion</Text>
           </View>
           <TouchableOpacity 
-            style={styles.suggestionBubble}
+            style={[styles.suggestionBubble, { backgroundColor: colors.card, borderColor: isDark ? '#443' : '#FFE0B2' }]}
             onPress={() => handleSend(aiSuggestion.text.replace('Suggested: ', '').replace(/"/g, ''))}
           >
-            <Text style={styles.suggestionText}>
+            <Text style={[styles.suggestionText, { color: colors.text }]}>
               {aiSuggestion.text.replace('Suggested: ', '').replace(/"/g, '')}
             </Text>
-            <IconSymbol name="arrow.up.circle.fill" size={24} color={Colors.light.primary} />
+            <IconSymbol name="arrow.up.circle.fill" size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
       )}
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { backgroundColor: colors.card, borderTopColor: isDark ? '#333' : '#f0f0f0' }]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: isDark ? '#333' : '#F5F5F5', color: colors.text }]}
           value={inputText}
           onChangeText={setInputText}
           placeholder="Type a message..."
-          placeholderTextColor="#999"
+          placeholderTextColor={isDark ? '#AAA' : '#999'}
           multiline
         />
         <TouchableOpacity 
-          style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]} 
+          style={[styles.sendButton, { backgroundColor: colors.primary }, !inputText.trim() && styles.sendButtonDisabled]} 
           onPress={() => handleSend()}
           disabled={!inputText.trim()}
         >
@@ -170,7 +174,6 @@ export default function ChatRoomScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
   header: {
     flexDirection: 'row',
@@ -178,9 +181,7 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingBottom: 16,
     paddingHorizontal: 16,
-    backgroundColor: Colors.light.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   backButton: {
     marginRight: 16,
@@ -191,7 +192,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: Colors.light.text,
   },
   verifiedBadge: {
     flexDirection: 'row',
@@ -200,7 +200,6 @@ const styles = StyleSheet.create({
   },
   verifiedText: {
     fontSize: 12,
-    color: Colors.light.primary,
     marginLeft: 4,
     fontWeight: '500',
   },
@@ -212,7 +211,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F5F5F5',
     padding: 8,
     borderRadius: 12,
     marginVertical: 16,
@@ -221,7 +219,6 @@ const styles = StyleSheet.create({
   },
   systemMessageText: {
     fontSize: 12,
-    color: '#666',
     marginLeft: 6,
     textAlign: 'center',
   },
@@ -233,13 +230,9 @@ const styles = StyleSheet.create({
   },
   myMessage: {
     alignSelf: 'flex-end',
-    backgroundColor: Colors.light.primary,
-    borderBottomRightRadius: 4,
   },
   theirMessage: {
     alignSelf: 'flex-start',
-    backgroundColor: '#F0F0F0',
-    borderBottomLeftRadius: 4,
   },
   messageText: {
     fontSize: 16,
@@ -247,9 +240,6 @@ const styles = StyleSheet.create({
   },
   myMessageText: {
     color: 'white',
-  },
-  theirMessageText: {
-    color: Colors.light.text,
   },
   timestamp: {
     fontSize: 10,
@@ -259,14 +249,9 @@ const styles = StyleSheet.create({
   myTimestamp: {
     color: 'rgba(255,255,255,0.7)',
   },
-  theirTimestamp: {
-    color: '#999',
-  },
   suggestionContainer: {
     padding: 16,
-    backgroundColor: '#FFF9F0', // Light orange/yellow tint
     borderTopWidth: 1,
-    borderTopColor: '#FFE0B2',
   },
   suggestionHeader: {
     flexDirection: 'row',
@@ -276,7 +261,6 @@ const styles = StyleSheet.create({
   suggestionTitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: Colors.light.primary,
     marginLeft: 6,
     textTransform: 'uppercase',
   },
@@ -284,11 +268,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'white',
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FFE0B2',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -298,7 +280,6 @@ const styles = StyleSheet.create({
   suggestionText: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
     marginRight: 12,
     fontStyle: 'italic',
   },
@@ -306,13 +287,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: 12,
-    backgroundColor: 'white',
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
   },
   input: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingTop: 10,
@@ -325,7 +303,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
