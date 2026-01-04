@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { useCart } from '@/store/CartContext';
-import { useAuth } from '@/store/AuthContext';
+import { useUser } from '@/store/UserContext';
 import { PRODUCTS } from '@/data/products';
 import { MotiView, MotiText } from 'moti';
 import { DailyPanchang } from '@/components/home/DailyPanchang';
@@ -23,7 +23,7 @@ const POPULAR_PANDITS = [
 export default function CustomerHomeScreen() {
   const router = useRouter();
   const { addToCart, updateQuantity, getItemCount } = useCart();
-  const { user } = useAuth();
+  const { user } = useUser();
   const { t } = useTranslation();
 
   return (
@@ -35,9 +35,13 @@ export default function CustomerHomeScreen() {
             <Ionicons name="menu-outline" size={28} color="#333" />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.push('/(customer)/profile')}>
-             <View style={styles.profileImagePlaceholder}>
-                <Ionicons name="person" size={20} color="#FFF" />
-             </View>
+             {user?.photoUri ? (
+               <Image source={{ uri: user.photoUri }} style={styles.profileImage} />
+             ) : (
+               <View style={styles.profileImagePlaceholder}>
+                  <Text style={styles.profileInitials}>{user?.name?.[0]?.toUpperCase() || 'G'}</Text>
+               </View>
+             )}
           </TouchableOpacity>
         </View>
 
@@ -224,6 +228,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  profileInitials: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   greetingSection: {
     paddingHorizontal: 20,
