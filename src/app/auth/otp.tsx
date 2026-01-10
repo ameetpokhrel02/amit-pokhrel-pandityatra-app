@@ -1,44 +1,69 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { Image } from 'expo-image';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Colors } from '@/constants/Colors';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert,
+} from "react-native";
+import { Image } from "expo-image";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Colors } from "@/constants/Colors";
+import { verifyOtp, login, getMe } from "@/services/auth.service";
 
 export default function OTPScreen() {
   const router = useRouter();
-  const { identifier, method } = useLocalSearchParams();
-  const [otp, setOtp] = useState('');
+  const { email, phone } = useLocalSearchParams();
+  const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleVerify = () => {
-    if (otp.length === 6) {
-      // TODO: Verify OTP API
-      // Mock success
-      // Determine user role (mock logic)
-      // In a real app, the API response would contain the user role
-      const isPandit = false; // Change this to true to test Pandit flow
-      
-      if (isPandit) {
-        router.replace('/(pandit)' as any);
+  const handleVerify = async () => {
+    if (otp.length !== 6) {
+      Alert.alert("Error", "Enter valid 6 digit OTP");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // 1. Verify OTP
+      await verifyOtp(email as string, otp);
+
+      // 2. Login → get JWT
+      const res = await login(phone as string, otp); // if backend auto sets password = otp
+
+      // 3. Load profile
+      const user = await getMe();
+
+      // 4. Route by role
+      if (user.role === "pandit") {
+        router.replace("/(pandit)");
+      } else if (user.role === "admin") {
+        router.replace("/admin/dashboard");
       } else {
-        router.replace('/(customer)' as any);
+        router.replace("/(customer)");
       }
-    } else {
-      alert('Please enter a valid 6-digit OTP');
+    } catch (err) {
+      Alert.alert("Invalid OTP", "Verification failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <View style={styles.logoContainer}>
             <Image
-              source={require('@/assets/images/pandit-logo.png')}
+              source={require("@/assets/images/pandit-logo.png")}
               style={styles.logo}
               contentFit="contain"
             />
@@ -46,7 +71,7 @@ export default function OTPScreen() {
 
           <Text style={styles.title}>Verify OTP Code</Text>
           <Text style={styles.subtitle}>
-            Enter the code sent to {identifier || 'your phone/email'}
+            Enter the code sent to {email || phone}
           </Text>
 
           <Input
@@ -59,15 +84,16 @@ export default function OTPScreen() {
             style={styles.otpInput}
           />
 
-          <Button 
-            title="Verify" 
-            onPress={handleVerify} 
+          <Button
+            title={loading ? "Verifying..." : "Verify"}
+            onPress={handleVerify}
+            disabled={loading}
             style={styles.submitButton}
           />
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Didn't receive code? </Text>
-            <Text style={styles.link} onPress={() => alert('Resend OTP')}>Resend</Text>
+            <Text style={styles.link}>Resend</Text>
           </View>
         </View>
       </ScrollView>
@@ -82,21 +108,21 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 24,
   },
   card: {
     backgroundColor: Colors.light.white,
     borderRadius: 20,
     padding: 24,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
   },
   logoContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   logo: {
@@ -105,15 +131,15 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.light.text,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: '#757575',
-    textAlign: 'center',
+    color: "#757575",
+    textAlign: "center",
     marginBottom: 32,
   },
   otpInput: {
@@ -123,15 +149,15 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 24,
   },
   footerText: {
-    color: '#757575',
+    color: "#757575",
   },
   link: {
     color: Colors.light.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
