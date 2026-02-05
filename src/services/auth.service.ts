@@ -45,7 +45,7 @@ export const verifyOtp = async (email: string | null, otp: string, phone?: strin
   }
   return res;
 };
-
+// 2.1️⃣ Axios interceptor for token refresh
 // 3️⃣ Login (JWT) - Deprecated / wrapped by verifyOtp
 export const login = async (phone: string, password: string) => {
   // If we need password login later, use api.passwordLogin
