@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import PhoneInput from "react-native-phone-number-input";
 import {
   View,
   Text,
@@ -35,6 +36,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [formattedPhone, setFormattedPhone] = useState("");
+  const phoneInput = useRef<PhoneInput>(null);
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -79,7 +82,11 @@ export default function LoginScreen() {
           }));
 
           if (user.role === "pandit") {
-            router.replace("/(pandit)" as any);
+            if (user.is_pandit_profile_complete) {
+              router.replace("/(pandit)" as any);
+            } else {
+              router.replace("/auth/pandit-profile-setup" as any);
+            }
           } else if (user.role === "admin") {
             router.replace("/admin/dashboard" as any);
           } else {
@@ -109,22 +116,42 @@ export default function LoginScreen() {
           return;
         }
 
+        if (method === 'phone') {
+          const checkValid = phoneInput.current?.isValidNumber(phone);
+          if (!checkValid) {
+            Alert.alert("Invalid Phone", "Please enter a valid phone number.");
+            setLoading(false);
+            return;
+          }
+        }
+
+        const formattedIdentifier = method === 'email' ? email : formattedPhone;
+
         await requestLoginOtp({
           email: method === 'email' ? email : undefined,
-          phone_number: method === 'phone' ? phone : undefined
+          phone_number: method === 'phone' ? formattedPhone : undefined
         });
 
         router.push({
           pathname: "/auth/otp",
-          params: { email: method === 'email' ? email : undefined, phone: method === 'phone' ? phone : undefined },
+          params: { email: method === 'email' ? email : undefined, phone: method === 'phone' ? formattedPhone : undefined },
         });
       } else {
         // Password Login
-        const identifier = method === 'email' ? email : phone;
+        const identifier = method === 'email' ? email : formattedPhone;
         if (!identifier || !password) {
           Alert.alert("Error", "Please enter both credentials");
           setLoading(false);
           return;
+        }
+
+        if (method === 'phone') {
+          const checkValid = phoneInput.current?.isValidNumber(phone);
+          if (!checkValid) {
+            Alert.alert("Invalid Phone", "Please enter a valid phone number.");
+            setLoading(false);
+            return;
+          }
         }
 
         const loginPayload = method === 'email' ? { email: identifier, password } : { phone_number: identifier, password };
@@ -142,7 +169,11 @@ export default function LoginScreen() {
         }));
 
         if (user.role === "pandit") {
-          router.replace("/(pandit)" as any);
+          if (user.is_pandit_profile_complete) {
+            router.replace("/(pandit)" as any);
+          } else {
+            router.replace("/auth/pandit-profile-setup" as any);
+          }
         } else if (user.role === "admin") {
           router.replace("/admin/dashboard" as any);
         } else {
@@ -224,14 +255,22 @@ export default function LoginScreen() {
           </View>
 
           {method === "phone" ? (
-            <Input
-              label="Phone Number"
-              placeholder="98XXXXXXXX"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              leftIcon={<Ionicons name="call-outline" size={20} color="#6B7280" />}
-            />
+            <View style={styles.phoneInputContainer}>
+              <Text style={styles.inputLabel}>Phone Number</Text>
+              <PhoneInput
+                ref={phoneInput}
+                defaultValue={phone}
+                defaultCode="NP"
+                layout="first"
+                onChangeText={setPhone}
+                onChangeFormattedText={setFormattedPhone}
+                containerStyle={styles.phoneContainer}
+                textContainerStyle={styles.phoneTextContainer}
+                textInputStyle={styles.phoneTextInput}
+                codeTextStyle={styles.phoneCodeText}
+                flagButtonStyle={styles.phoneFlagButton}
+              />
+            </View>
           ) : (
             <Input
               label="Email Address"
@@ -433,5 +472,40 @@ const styles = StyleSheet.create({
   link: {
     color: Colors.light.primary,
     fontWeight: "600",
+  },
+  phoneInputContainer: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 6,
+  },
+  phoneContainer: {
+    width: "100%",
+    borderRadius: 8,
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    height: 56,
+  },
+  phoneTextContainer: {
+    borderRadius: 8,
+    backgroundColor: "#F9FAFB",
+    paddingVertical: 0,
+  },
+  phoneTextInput: {
+    fontSize: 16,
+    color: '#1F2937',
+    height: 56,
+  },
+  phoneCodeText: {
+    fontSize: 16,
+    color: '#1F2937',
+  },
+  phoneFlagButton: {
+    borderRightWidth: 1,
+    borderRightColor: '#E5E7EB',
   },
 });

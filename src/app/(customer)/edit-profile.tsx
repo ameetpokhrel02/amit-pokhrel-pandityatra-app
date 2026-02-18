@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import PhoneInput from "react-native-phone-number-input";
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,8 +19,10 @@ export default function EditProfileScreen() {
 
     const [fullName, setFullName] = useState(user?.name || '');
     const [phone, setPhone] = useState(user?.phone || '');
+    const [formattedPhone, setFormattedPhone] = useState(user?.phone || '');
     const [photoUri, setPhotoUri] = useState(user?.photoUri || null);
     const [loading, setLoading] = useState(false);
+    const phoneInput = useRef<PhoneInput>(null);
 
     const handlePickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -40,6 +43,12 @@ export default function EditProfileScreen() {
             return;
         }
 
+        const checkValid = phoneInput.current?.isValidNumber(phone);
+        if (!checkValid) {
+            Alert.alert('Invalid Phone', 'Please enter a valid phone number');
+            return;
+        }
+
         setLoading(true);
         try {
             const hasPhotoChanged = photoUri && photoUri !== user?.photoUri;
@@ -48,7 +57,7 @@ export default function EditProfileScreen() {
                 // Use FormData for photo upload
                 const formData = new FormData();
                 formData.append('full_name', fullName);
-                formData.append('phone_number', phone);
+                formData.append('phone_number', formattedPhone);
 
                 // For React Native FormData, we need a special object
                 const photoName = photoUri.split('/').pop() || 'profile.jpg';
@@ -67,14 +76,14 @@ export default function EditProfileScreen() {
                 // Use regular JSON for simple profile updates
                 await updateUserProfile({
                     full_name: fullName,
-                    phone_number: phone,
+                    phone_number: formattedPhone,
                 });
             }
 
             // Update local context
             updateUser({
                 name: fullName,
-                phone: phone,
+                phone: formattedPhone,
                 photoUri: photoUri,
             });
 
@@ -126,13 +135,22 @@ export default function EditProfileScreen() {
                         onChangeText={setFullName}
                         placeholder="Enter your full name"
                     />
-                    <Input
-                        label="Phone Number"
-                        value={phone}
-                        onChangeText={setPhone}
-                        placeholder="98XXXXXXXX"
-                        keyboardType="phone-pad"
-                    />
+                    <View style={styles.phoneInputContainer}>
+                        <Text style={[styles.inputLabel, { color: colors.text }]}>Phone Number</Text>
+                        <PhoneInput
+                            ref={phoneInput}
+                            defaultValue={phone}
+                            defaultCode="NP"
+                            layout="first"
+                            onChangeText={setPhone}
+                            onChangeFormattedText={setFormattedPhone}
+                            containerStyle={[styles.phoneContainer, { backgroundColor: colors.background, borderColor: colors.border }]}
+                            textContainerStyle={[styles.phoneTextContainer, { backgroundColor: colors.background }]}
+                            textInputStyle={[styles.phoneTextInput, { color: colors.text }]}
+                            codeTextStyle={[styles.phoneCodeText, { color: colors.text }]}
+                            flagButtonStyle={[styles.phoneFlagButton, { borderColor: colors.border }]}
+                        />
+                    </View>
 
                     <View style={styles.infoBox}>
                         <Ionicons name="information-circle-outline" size={20} color="#666" />
@@ -231,5 +249,33 @@ const styles = StyleSheet.create({
     },
     saveButton: {
         marginTop: 10,
+    },
+    phoneInputContainer: {
+        marginBottom: 8,
+    },
+    inputLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+        marginBottom: 6,
+    },
+    phoneContainer: {
+        width: "100%",
+        borderRadius: 8,
+        borderWidth: 1,
+        height: 56,
+    },
+    phoneTextContainer: {
+        borderRadius: 8,
+        paddingVertical: 0,
+    },
+    phoneTextInput: {
+        fontSize: 16,
+        height: 56,
+    },
+    phoneCodeText: {
+        fontSize: 16,
+    },
+    phoneFlagButton: {
+        borderRightWidth: 1,
     },
 });

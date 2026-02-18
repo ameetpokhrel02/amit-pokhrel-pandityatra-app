@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import PhoneInput from "react-native-phone-number-input";
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
@@ -18,12 +19,18 @@ export default function CustomerRegisterScreen() {
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [formattedValue, setFormattedValue] = useState("");
+  const phoneInput = useRef<PhoneInput>(null);
 
   const validate = () => {
-    // Phone validation: Nepal format (starts with 98, 10 digits)
-    const phoneRegex = /^98\d{8}$/;
-    if (!phoneRegex.test(form.phone)) {
-      Alert.alert('Invalid Phone', 'Phone number must be 10 digits and start with 98.');
+    if (!form.fullName || !form.phone || !form.password) {
+      Alert.alert('Required', 'Please fill in all required fields.');
+      return false;
+    }
+
+    const checkValid = phoneInput.current?.isValidNumber(form.phone);
+    if (!checkValid) {
+      Alert.alert('Invalid Phone', 'Please enter a valid phone number.');
       return false;
     }
 
@@ -54,7 +61,7 @@ export default function CustomerRegisterScreen() {
       // Use backend /api/users/register/ via auth.service adapter
       await registerUser({
         full_name: form.fullName,
-        phone_number: form.phone,
+        phone_number: formattedValue,
         email: form.email,
         password: form.password,
         role: 'user',
@@ -67,7 +74,7 @@ export default function CustomerRegisterScreen() {
           text: 'OK',
           onPress: () => router.push({
             pathname: '/auth/otp',
-            params: { email: form.email, phone: form.phone, mode: 'register' }
+            params: { email: form.email, phone: formattedValue, mode: 'register' }
           } as any)
         }],
       );
@@ -118,14 +125,26 @@ export default function CustomerRegisterScreen() {
             leftIcon={<Ionicons name="person-outline" size={20} color="#6B7280" />}
           />
 
-          <Input
-            label="Phone Number"
-            placeholder="98XXXXXXXX"
-            keyboardType="phone-pad"
-            value={form.phone}
-            onChangeText={(t) => setForm({ ...form, phone: t })}
-            leftIcon={<Ionicons name="call-outline" size={20} color="#6B7280" />}
-          />
+          <View style={styles.phoneInputContainer}>
+            <Text style={styles.inputLabel}>Phone Number</Text>
+            <PhoneInput
+              ref={phoneInput}
+              defaultValue={form.phone}
+              defaultCode="NP"
+              layout="first"
+              onChangeText={(text) => {
+                setForm({ ...form, phone: text });
+              }}
+              onChangeFormattedText={(text) => {
+                setFormattedValue(text);
+              }}
+              containerStyle={styles.phoneContainer}
+              textContainerStyle={styles.phoneTextContainer}
+              textInputStyle={styles.phoneTextInput}
+              codeTextStyle={styles.phoneCodeText}
+              flagButtonStyle={styles.phoneFlagButton}
+            />
+          </View>
 
           <Input
             label="Email Address"
@@ -238,5 +257,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: Colors.light.primary,
+  },
+  phoneInputContainer: {
+    marginBottom: 8,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 6,
+  },
+  phoneContainer: {
+    width: "100%",
+    borderRadius: 8,
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    height: 56,
+  },
+  phoneTextContainer: {
+    borderRadius: 8,
+    backgroundColor: "#F9FAFB",
+    paddingVertical: 0,
+  },
+  phoneTextInput: {
+    fontSize: 16,
+    color: '#1F2937',
+    height: 56,
+  },
+  phoneCodeText: {
+    fontSize: 16,
+    color: '#1F2937',
+  },
+  phoneFlagButton: {
+    borderRightWidth: 1,
+    borderRightColor: '#E5E7EB',
   },
 });

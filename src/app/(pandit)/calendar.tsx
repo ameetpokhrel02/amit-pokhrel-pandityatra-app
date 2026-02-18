@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity
 import DateTimePicker from 'react-native-ui-datepicker';
 import dayjs from 'dayjs';
 import { Colors } from '@/constants/Colors';
-import { PanditService } from '@/services/pandit.service';
+import { fetchPanditCalendar } from '@/services/booking.service';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function CalendarScreen() {
@@ -15,7 +15,7 @@ export default function CalendarScreen() {
     const fetchCalendarData = async () => {
       try {
         setLoading(true);
-        const data = await PanditService.getCalendar();
+        const data = await fetchPanditCalendar();
         setEvents(data);
       } catch (error) {
         console.error('Error fetching calendar:', error);
@@ -39,7 +39,9 @@ export default function CalendarScreen() {
       <View style={styles.calendarContainer}>
         <DateTimePicker
           date={date}
-          onChange={(params: any) => setDate(dayjs(params.date))}
+          onChange={(params: any) => {
+            if (params.date) setDate(dayjs(params.date));
+          }}
           mode="single"
           // @ts-ignore
           headerTextStyle={styles.calendarHeader}

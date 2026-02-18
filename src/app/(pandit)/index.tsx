@@ -154,7 +154,7 @@ export default function PanditDashboardScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>My Services</Text>
-          <TouchableOpacity onPress={() => { }}>
+          <TouchableOpacity onPress={() => router.push('/(pandit)/services' as any)}>
             <Text style={styles.seeAll}>Manage</Text>
           </TouchableOpacity>
         </View>

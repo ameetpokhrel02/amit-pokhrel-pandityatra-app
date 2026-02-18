@@ -28,29 +28,29 @@ export default function PanditTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="bookings"
+        options={{
+          title: 'Bookings',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'list' : 'list-outline'} size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="services"
+        options={{
+          title: 'Services',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'sparkles' : 'sparkles-outline'} size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="calendar"
         options={{
           title: 'Calendar',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="bookings"
-        options={{
-          title: 'Bookings',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'book' : 'book-outline'} size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="earnings"
-        options={{
-          title: 'Earnings',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'wallet' : 'wallet-outline'} size={24} color={color} />
           ),
         }}
       />
@@ -61,6 +61,12 @@ export default function PanditTabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} size={24} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="earnings"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

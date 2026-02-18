@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from 'react-native';
+import PhoneInput from "react-native-phone-number-input";
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
@@ -23,34 +24,51 @@ export default function PanditRegisterScreen() {
     fullName: '',
     phone: '',
     email: '',
-    experience: '',
-    bio: '',
-    language: '',
+    password: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formattedValue, setFormattedValue] = useState("");
+  const phoneInput = useRef<PhoneInput>(null);
 
-  const [selectedExpertise, setSelectedExpertise] = useState<string[]>([]);
-
-  const toggleExpertise = (item: string) => {
-    if (item === 'All Ceremonies') {
-      if (selectedExpertise.includes('All Ceremonies')) {
-        setSelectedExpertise([]);
-      } else {
-        setSelectedExpertise(EXPERTISE_OPTIONS);
-      }
-      return;
+  const validate = () => {
+    if (!form.fullName || !form.phone || !form.password) {
+      Alert.alert('Required', 'Please fill in all required fields');
+      return false;
     }
-
-    if (selectedExpertise.includes(item)) {
-      setSelectedExpertise(selectedExpertise.filter(i => i !== item));
-    } else {
-      setSelectedExpertise([...selectedExpertise, item]);
+    const checkValid = phoneInput.current?.isValidNumber(form.phone);
+    if (!checkValid) {
+      Alert.alert('Invalid Phone', 'Please enter a valid phone number');
+      return false;
     }
+    return true;
   };
 
-  const handleSubmit = () => {
-    // TODO: Submit registration
-    alert('Registration submitted for verification!');
-    router.replace('/auth/login' as any);
+  const handleSubmit = async () => {
+    if (!validate()) return;
+
+    try {
+      setLoading(true);
+      const { registerUser } = require('@/services/auth.service');
+      await registerUser({
+        full_name: form.fullName,
+        phone_number: formattedValue,
+        email: form.email || undefined,
+        password: form.password,
+        role: 'pandit',
+      });
+
+      alert('Registration successful! Please verify your phone number.');
+      router.push({
+        pathname: '/auth/otp',
+        params: { email: form.email, phone: formattedValue, mode: 'register' }
+      } as any);
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,7 +89,7 @@ export default function PanditRegisterScreen() {
         </View>
 
         <Text style={styles.headerTitle}>Register as Pandit</Text>
-        <Text style={styles.headerSubtitle}>Share your expertise with seekers</Text>
+        <Text style={styles.headerSubtitle}>Join our network of verified priests</Text>
 
         <View style={styles.form}>
           <Input
@@ -82,14 +100,26 @@ export default function PanditRegisterScreen() {
             leftIcon={<Ionicons name="person-outline" size={20} color="#6B7280" />}
           />
 
-          <Input
-            label="Phone Number *"
-            placeholder="9841234567"
-            keyboardType="phone-pad"
-            value={form.phone}
-            onChangeText={(t) => setForm({ ...form, phone: t })}
-            leftIcon={<Ionicons name="call-outline" size={20} color="#6B7280" />}
-          />
+          <View style={styles.phoneInputContainer}>
+            <Text style={styles.inputLabel}>Phone Number *</Text>
+            <PhoneInput
+              ref={phoneInput}
+              defaultValue={form.phone}
+              defaultCode="NP"
+              layout="first"
+              onChangeText={(text) => {
+                setForm({ ...form, phone: text });
+              }}
+              onChangeFormattedText={(text) => {
+                setFormattedValue(text);
+              }}
+              containerStyle={styles.phoneContainer}
+              textContainerStyle={styles.phoneTextContainer}
+              textInputStyle={styles.phoneTextInput}
+              codeTextStyle={styles.phoneCodeText}
+              flagButtonStyle={styles.phoneFlagButton}
+            />
+          </View>
 
           <Input
             label="Email (Optional)"
@@ -100,83 +130,29 @@ export default function PanditRegisterScreen() {
             leftIcon={<Ionicons name="mail-outline" size={20} color="#6B7280" />}
           />
 
-          {/* Areas of Expertise */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Areas of Expertise * (Select all that apply)</Text>
-            <View style={styles.expertiseGrid}>
-              {EXPERTISE_OPTIONS.map((item) => (
-                <TouchableOpacity
-                  key={item}
-                  style={styles.checkboxRow}
-                  onPress={() => toggleExpertise(item)}
-                >
-                  <View style={[styles.checkbox, selectedExpertise.includes(item) && styles.checkboxChecked]}>
-                    {selectedExpertise.includes(item) && <Ionicons name="checkmark" size={14} color="#FFF" />}
-                  </View>
-                  <Text style={styles.checkboxLabel}>{item}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Primary Language */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Primary Language *</Text>
-            <View style={styles.languageContainer}>
-              {['Nepali', 'English', 'Hindi', 'Maithili'].map((lang) => (
-                <TouchableOpacity
-                  key={lang}
-                  style={[
-                    styles.languageOption,
-                    form.language === lang && styles.languageOptionSelected
-                  ]}
-                  onPress={() => setForm({ ...form, language: lang })}
-                >
-                  <Text style={[
-                    styles.languageText,
-                    form.language === lang && styles.languageTextSelected
-                  ]}>{lang}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Years of Experience */}
           <Input
-            label="Years of Experience *"
-            placeholder="e.g., 10"
-            keyboardType="numeric"
-            value={form.experience}
-            onChangeText={(t) => setForm({ ...form, experience: t })}
-            leftIcon={<Ionicons name="calendar-outline" size={20} color="#6B7280" />}
+            label="Password *"
+            placeholder="Enter password"
+            secureTextEntry={!showPassword}
+            value={form.password}
+            onChangeText={(t) => setForm({ ...form, password: t })}
+            leftIcon={<Ionicons name="lock-closed-outline" size={20} color="#6B7280" />}
+            rightIcon={
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color="#6B7280"
+                />
+              </TouchableOpacity>
+            }
           />
 
-          {/* Brief Bio */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Brief Bio (Optional)</Text>
-            <Input
-              placeholder="Tell us about yourself and your experience..."
-              multiline
-              numberOfLines={4}
-              style={styles.textArea}
-              value={form.bio}
-              onChangeText={(t) => setForm({ ...form, bio: t })}
-            />
-          </View>
-
-          {/* Certification Upload */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Certification/License *</Text>
-            <TouchableOpacity style={styles.uploadBox}>
-              <Ionicons name="cloud-upload-outline" size={32} color="#D97706" />
-              <Text style={styles.uploadTitle}>Upload certification</Text>
-              <Text style={styles.uploadSubtitle}>PDF, JPG, PNG (max 5MB)</Text>
-            </TouchableOpacity>
-          </View>
-
           <Button
-            title="Submit for Verification"
+            title={loading ? "Registering..." : "Continue"}
             onPress={handleSubmit}
+            isLoading={loading}
+            disabled={loading}
             style={styles.submitButton}
           />
 
@@ -358,5 +334,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#D97706',
+  },
+  phoneInputContainer: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 6,
+  },
+  phoneContainer: {
+    width: "100%",
+    borderRadius: 8,
+    backgroundColor: "#FFF",
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    height: 56,
+  },
+  phoneTextContainer: {
+    borderRadius: 8,
+    backgroundColor: "#FFF",
+    paddingVertical: 0,
+  },
+  phoneTextInput: {
+    fontSize: 16,
+    color: '#1F2937',
+    height: 56,
+  },
+  phoneCodeText: {
+    fontSize: 16,
+    color: '#1F2937',
+  },
+  phoneFlagButton: {
+    borderRightWidth: 1,
+    borderRightColor: '#E5E7EB',
   },
 });
