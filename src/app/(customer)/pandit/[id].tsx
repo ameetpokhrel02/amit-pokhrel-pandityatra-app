@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { MotiView, MotiText } from 'moti';
 import { Colors } from '@/constants/Colors';
-import { PanditService } from '@/services/pandit.service';
+import { fetchPandit } from '@/services/pandit.service';
 import { Pandit } from '@/types/pandit';
 import { useTheme } from '@/store/ThemeContext';
 
@@ -18,11 +19,39 @@ export default function PanditProfileScreen() {
 
   useEffect(() => {
     const loadPandit = async () => {
-      if (typeof id === 'string') {
-        const data = await PanditService.getPanditById(id);
-        setPandit(data || null);
+      try {
+        if (typeof id === 'string') {
+          const data = await fetchPandit(Number(id));
+          if (data) {
+            const mappedPandit: Pandit = {
+              id: String(data.id),
+              name: data.user_details?.full_name || 'Unknown',
+              image: data.user_details?.profile_pic_url || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+              location: 'Kathmandu, Nepal',
+              rating: data.rating || 5.0,
+              reviewCount: data.review_count || 0,
+              experience: data.experience_years || 0,
+              isAvailable: data.is_available,
+              bio: data.bio || '',
+              specialization: data.expertise ? data.expertise.split(',').map(s => s.trim()) : [],
+              languages: data.language ? data.language.split(',').map(s => s.trim()) : [],
+              services: (data.services || []).map(s => ({
+                id: s.id,
+                name: s.puja_details?.name || 'Service',
+                duration: s.duration_minutes,
+                price: parseFloat(s.custom_price) || s.puja_details?.base_price || 0
+              })),
+              price: data.services && data.services.length > 0 ? Math.min(...data.services.map(s => parseFloat(s.custom_price))) : 500,
+              isVerified: data.is_verified
+            };
+            setPandit(mappedPandit);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load pandit:', e);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     loadPandit();
   }, [id]);

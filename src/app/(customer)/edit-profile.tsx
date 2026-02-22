@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
-import PhoneInput from "react-native-phone-number-input";
+import { CustomPhoneInput } from "@/components/ui/CustomPhoneInput";
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,7 +22,6 @@ export default function EditProfileScreen() {
     const [formattedPhone, setFormattedPhone] = useState(user?.phone || '');
     const [photoUri, setPhotoUri] = useState(user?.photoUri || null);
     const [loading, setLoading] = useState(false);
-    const phoneInput = useRef<PhoneInput>(null);
 
     const handlePickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -43,8 +42,7 @@ export default function EditProfileScreen() {
             return;
         }
 
-        const checkValid = phoneInput.current?.isValidNumber(phone);
-        if (!checkValid) {
+        if (!phone || phone.length < 10) {
             Alert.alert('Invalid Phone', 'Please enter a valid phone number');
             return;
         }
@@ -137,18 +135,10 @@ export default function EditProfileScreen() {
                     />
                     <View style={styles.phoneInputContainer}>
                         <Text style={[styles.inputLabel, { color: colors.text }]}>Phone Number</Text>
-                        <PhoneInput
-                            ref={phoneInput}
-                            defaultValue={phone}
-                            defaultCode="NP"
-                            layout="first"
+                        <CustomPhoneInput
+                            value={phone}
                             onChangeText={setPhone}
-                            onChangeFormattedText={setFormattedPhone}
-                            containerStyle={[styles.phoneContainer, { backgroundColor: colors.background, borderColor: colors.border }]}
-                            textContainerStyle={[styles.phoneTextContainer, { backgroundColor: colors.background }]}
-                            textInputStyle={[styles.phoneTextInput, { color: colors.text }]}
-                            codeTextStyle={[styles.phoneCodeText, { color: colors.text }]}
-                            flagButtonStyle={[styles.phoneFlagButton, { borderColor: colors.border }]}
+                            onFormattedChange={setFormattedPhone}
                         />
                     </View>
 

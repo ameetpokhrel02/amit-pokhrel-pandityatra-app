@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { MotiView, AnimatePresence } from 'moti';
@@ -8,14 +9,14 @@ import DateTimePicker from 'react-native-ui-datepicker';
 import dayjs from 'dayjs';
 import { useTheme } from '@/store/ThemeContext';
 import { fetchPandit } from '@/services/pandit.service';
-import { createBooking } from '@/services/booking.service';
+import { createBooking, BookingPayload } from '@/services/booking.service';
 import { createPayment, PaymentIntentResponse } from '@/services/payment.service';
 import { Booking, PanditService, Pandit } from '@/services/api';
 
 const STEPS = ['Service', 'Date & Time', 'Address', 'Review'];
 
 export default function BookingScreen() {
-  const { panditId } = useLocalSearchParams();
+  const { panditId, serviceId } = useLocalSearchParams();
   const router = useRouter();
   const { colors, theme } = useTheme();
   const isDark = theme === 'dark';
@@ -26,7 +27,7 @@ export default function BookingScreen() {
   const [paymentInfo, setPaymentInfo] = useState<PaymentIntentResponse | null>(null);
 
   // Form State
-  const [selectedService, setSelectedService] = useState('');
+  const [selectedService, setSelectedService] = useState<PanditService | null>(null);
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState('');
   const [address, setAddress] = useState('');
@@ -37,10 +38,18 @@ export default function BookingScreen() {
       if (typeof panditId === 'string') {
         const data = await fetchPandit(Number(panditId));
         setPandit(data || null);
+
+        // Pre-select service if serviceId is provided
+        if (data?.services && serviceId) {
+          const service = data.services.find(s => s.id === Number(serviceId));
+          if (service) {
+            setSelectedService(service);
+          }
+        }
       }
     };
     loadPandit();
-  }, [panditId]);
+  }, [panditId, serviceId]);
 
   const handleNext = () => {
     if (currentStep === 0 && !selectedService) {
@@ -72,16 +81,18 @@ export default function BookingScreen() {
   };
 
   const handleBooking = async () => {
-    if (!pandit) return;
+    if (!pandit || !selectedService) return;
 
     try {
       setIsSubmitting(true);
 
       // 1️⃣ Create booking on backend
-      const bookingPayload: Partial<Booking> = {
-        pandit: pandit.id as unknown as number,
+      const bookingPayload: BookingPayload = {
+        pandit: pandit.id,
+        service: selectedService.id,
         booking_date: dayjs(selectedDate).format('YYYY-MM-DD'),
         booking_time: selectedTime,
+        location: address,
         notes,
       };
 
@@ -119,7 +130,7 @@ export default function BookingScreen() {
         >
           <Text style={[styles.successTitle, { color: colors.text }]}>Booking Created</Text>
           <Text style={[styles.successMessage, { color: isDark ? '#AAA' : '#666' }]}>
-            Your booking with {pandit?.name} for {selectedService} has been created.
+            Your booking with {pandit?.user_details?.full_name} for {selectedService?.puja_details?.name} has been created.
           </Text>
 
           {paymentInfo?.payment_url && (
@@ -190,17 +201,17 @@ export default function BookingScreen() {
             >
               <Text style={[styles.stepTitle, { color: colors.text }]}>Select Service</Text>
               <View style={styles.optionsContainer}>
-                {pandit?.specialization.map((spec) => (
+                {pandit?.services?.map((service) => (
                   <TouchableOpacity
-                    key={spec}
-                    style={[styles.optionCard, { backgroundColor: colors.card, borderColor: isDark ? '#333' : '#F0F0F0' }, selectedService === spec && { borderColor: colors.primary, backgroundColor: isDark ? '#332' : '#FFF7ED' }]}
-                    onPress={() => setSelectedService(spec)}
+                    key={service.id}
+                    style={[styles.optionCard, { backgroundColor: colors.card, borderColor: isDark ? '#333' : '#F0F0F0' }, selectedService?.id === service.id && { borderColor: colors.primary, backgroundColor: isDark ? '#332' : '#FFF7ED' }]}
+                    onPress={() => setSelectedService(service)}
                   >
-                    <View style={[styles.radioCircle, { borderColor: isDark ? '#666' : '#CCC' }, selectedService === spec && { borderColor: colors.primary }]}>
-                      {selectedService === spec && <View style={[styles.radioDot, { backgroundColor: colors.primary }]} />}
+                    <View style={[styles.radioCircle, { borderColor: isDark ? '#666' : '#CCC' }, selectedService?.id === service.id && { borderColor: colors.primary }]}>
+                      {selectedService?.id === service.id && <View style={[styles.radioDot, { backgroundColor: colors.primary }]} />}
                     </View>
-                    <Text style={[styles.optionText, { color: colors.text }, selectedService === spec && { color: colors.primary, fontWeight: '600' }]}>
-                      {spec}
+                    <Text style={[styles.optionText, { color: colors.text }, selectedService?.id === service.id && { color: colors.primary, fontWeight: '600' }]}>
+                      {service.puja_details?.name}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -318,12 +329,12 @@ export default function BookingScreen() {
               <View style={[styles.summaryCard, { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' }]}>
                 <View style={styles.summaryRow}>
                   <Text style={[styles.summaryLabel, { color: isDark ? '#AAA' : '#666' }]}>Pandit</Text>
-                  <Text style={[styles.summaryValue, { color: colors.text }]}>{pandit?.name}</Text>
+                  <Text style={[styles.summaryValue, { color: colors.text }]}>{pandit?.user_details?.full_name}</Text>
                 </View>
                 <View style={[styles.summaryDivider, { backgroundColor: isDark ? '#333' : '#F0F0F0' }]} />
                 <View style={styles.summaryRow}>
                   <Text style={[styles.summaryLabel, { color: isDark ? '#AAA' : '#666' }]}>Service</Text>
-                  <Text style={[styles.summaryValue, { color: colors.text }]}>{selectedService}</Text>
+                  <Text style={[styles.summaryValue, { color: colors.text }]}>{selectedService?.puja_details?.name}</Text>
                 </View>
                 <View style={[styles.summaryDivider, { backgroundColor: isDark ? '#333' : '#F0F0F0' }]} />
                 <View style={styles.summaryRow}>
@@ -340,7 +351,7 @@ export default function BookingScreen() {
                 <View style={[styles.summaryDivider, { backgroundColor: isDark ? '#333' : '#F0F0F0' }]} />
                 <View style={styles.summaryRow}>
                   <Text style={[styles.summaryLabel, { color: isDark ? '#AAA' : '#666' }]}>Total Amount</Text>
-                  <Text style={[styles.totalPrice, { color: colors.primary }]}>NPR {pandit?.price}</Text>
+                  <Text style={[styles.totalPrice, { color: colors.primary }]}>NPR {selectedService?.custom_price}</Text>
                 </View>
               </View>
 

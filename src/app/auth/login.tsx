@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
-import PhoneInput from "react-native-phone-number-input";
+import React, { useEffect, useState } from "react";
+import { CustomPhoneInput } from "@/components/ui/CustomPhoneInput";
 import {
   View,
   Text,
@@ -37,7 +37,6 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formattedPhone, setFormattedPhone] = useState("");
-  const phoneInput = useRef<PhoneInput>(null);
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -117,8 +116,7 @@ export default function LoginScreen() {
         }
 
         if (method === 'phone') {
-          const checkValid = phoneInput.current?.isValidNumber(phone);
-          if (!checkValid) {
+          if (!phone || phone.length < 10) {
             Alert.alert("Invalid Phone", "Please enter a valid phone number.");
             setLoading(false);
             return;
@@ -146,8 +144,7 @@ export default function LoginScreen() {
         }
 
         if (method === 'phone') {
-          const checkValid = phoneInput.current?.isValidNumber(phone);
-          if (!checkValid) {
+          if (!phone || phone.length < 10) {
             Alert.alert("Invalid Phone", "Please enter a valid phone number.");
             setLoading(false);
             return;
@@ -257,18 +254,10 @@ export default function LoginScreen() {
           {method === "phone" ? (
             <View style={styles.phoneInputContainer}>
               <Text style={styles.inputLabel}>Phone Number</Text>
-              <PhoneInput
-                ref={phoneInput}
-                defaultValue={phone}
-                defaultCode="NP"
-                layout="first"
+              <CustomPhoneInput
+                value={phone}
                 onChangeText={setPhone}
-                onChangeFormattedText={setFormattedPhone}
-                containerStyle={styles.phoneContainer}
-                textContainerStyle={styles.phoneTextContainer}
-                textInputStyle={styles.phoneTextInput}
-                codeTextStyle={styles.phoneCodeText}
-                flagButtonStyle={styles.phoneFlagButton}
+                onFormattedChange={setFormattedPhone}
               />
             </View>
           ) : (

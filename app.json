@@ -53,7 +53,13 @@
           }
         }
       ],
-      "expo-web-browser"
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.anonymous.pandityatraapp",
+          "enableGooglePay": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -5,30 +5,30 @@ import { router } from 'expo-router';
 
 // Helper to determine base URL dynamically based on environment
 const getBaseUrl = () => {
+    const LOCAL_IP = '192.168.1.83'; // Your current machine's LAN IP
+    const PORT = '8000';
+
     // Option 1: Use local IP address from Expo manifest (Development)
     // This works if your phone is on the same Wi-Fi as your computer
     if (Constants.expoConfig?.hostUri) {
         const host = Constants.expoConfig.hostUri.split(':')[0];
 
         // Fix for tunnel mode: tunnel URL usually doesn't forward the backend port (8000)
-        // If using tunnel, fall back to the LAN IP (assuming device is on same network)
+        // If using tunnel, fall back to the LAN IP
         if (host.includes('exp.direct')) {
-            return 'http://192.168.1.172:8000/api';
+            return `http://${LOCAL_IP}:${PORT}/api`;
         }
 
-        // Use a flag for Emulator (optional)
-        // If testing on Emulator use 10.0.2.2 to access host localhost
-        // But expoConfig.hostUri usually returns the LAN IP
+        // Handle Android Emulator case if it specifically identifies as localhost or 127.0.0.1
+        if (host === 'localhost' || host === '127.0.0.1') {
+            return `http://10.0.2.2:${PORT}/api`;
+        }
 
-        return `http://${host}:8000/api`;
+        return `http://${host}:${PORT}/api`;
     }
 
-    // Option 2: Fallback for Android Emulator (if hostUri is missing)
-    // return 'http://10.0.2.2:8000/api';
-
-    // Option 3: Hardcoded IP as fallback
-    // Replace with your current local IP (e.g., from 'ipconfig' or 'ifconfig')
-    return 'http://192.168.1.172:8000/api';
+    // Option 2: Hardcoded IP as fallback
+    return `http://${LOCAL_IP}:${PORT}/api`;
 };
 
 export const API_BASE_URL = getBaseUrl();

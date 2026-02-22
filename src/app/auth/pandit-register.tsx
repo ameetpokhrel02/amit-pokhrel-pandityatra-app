@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from 'react-native';
-import PhoneInput from "react-native-phone-number-input";
+import { CustomPhoneInput } from "@/components/ui/CustomPhoneInput";
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
@@ -29,15 +29,13 @@ export default function PanditRegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formattedValue, setFormattedValue] = useState("");
-  const phoneInput = useRef<PhoneInput>(null);
 
   const validate = () => {
     if (!form.fullName || !form.phone || !form.password) {
       Alert.alert('Required', 'Please fill in all required fields');
       return false;
     }
-    const checkValid = phoneInput.current?.isValidNumber(form.phone);
-    if (!checkValid) {
+    if (!form.phone || form.phone.length < 10) {
       Alert.alert('Invalid Phone', 'Please enter a valid phone number');
       return false;
     }
@@ -102,22 +100,10 @@ export default function PanditRegisterScreen() {
 
           <View style={styles.phoneInputContainer}>
             <Text style={styles.inputLabel}>Phone Number *</Text>
-            <PhoneInput
-              ref={phoneInput}
-              defaultValue={form.phone}
-              defaultCode="NP"
-              layout="first"
-              onChangeText={(text) => {
-                setForm({ ...form, phone: text });
-              }}
-              onChangeFormattedText={(text) => {
-                setFormattedValue(text);
-              }}
-              containerStyle={styles.phoneContainer}
-              textContainerStyle={styles.phoneTextContainer}
-              textInputStyle={styles.phoneTextInput}
-              codeTextStyle={styles.phoneCodeText}
-              flagButtonStyle={styles.phoneFlagButton}
+            <CustomPhoneInput
+              value={form.phone}
+              onChangeText={(text) => setForm({ ...form, phone: text })}
+              onFormattedChange={setFormattedValue}
             />
           </View>
 

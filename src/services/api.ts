@@ -137,11 +137,12 @@ export interface Booking {
     status: 'PENDING' | 'ACCEPTED' | 'COMPLETED' | 'CANCELLED';
     booking_date: string;
     booking_time?: string;
+    location?: string;
     notes?: string;
-    total_fee?: number;
-    payment_status?: boolean;
-    payment_method?: string;
+    service?: number;
     service_name?: string;
+    payment_status?: string | boolean;
+    total_fee?: number;
 }
 
 
