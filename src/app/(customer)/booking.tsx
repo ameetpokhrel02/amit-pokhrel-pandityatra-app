@@ -98,13 +98,8 @@ export default function BookingScreen() {
 
       const booking = await createBooking(bookingPayload);
 
-      // 2️⃣ Create payment intent for this booking (default to Khalti for now)
-      const payment = await initiatePayment({
-        booking: booking.id,
-        payment_method: 'khalti',
-      });
-
-      setPaymentInfo(payment);
+      // Save just the booking ID to state so we can pass it to the success screen
+      setPaymentInfo({ payment_url: '', pidx: '', bookingId: booking.id } as any);
       setIsSuccess(true);
     } catch (error) {
       console.error(error);
@@ -133,18 +128,25 @@ export default function BookingScreen() {
             Your booking with {pandit?.user_details?.full_name} for {selectedService?.puja_details?.name} has been created.
           </Text>
 
-          {paymentInfo?.payment_url && (
-            <Text style={[styles.successMessage, { color: isDark ? '#A7F3D0' : '#047857' }]}>
-              Please complete your payment in the next step.
-            </Text>
-          )}
+          <Text style={[styles.successMessage, { color: isDark ? '#A7F3D0' : '#047857' }]}>
+            Please complete your payment to finalize the booking.
+          </Text>
 
-          <TouchableOpacity
-            style={[styles.homeButton, { backgroundColor: colors.primary }]}
-            onPress={() => router.push('/(customer)/bookings')}
-          >
-            <Text style={styles.homeButtonText}>Go to My Bookings</Text>
-          </TouchableOpacity>
+          <View style={{ gap: 12 }}>
+            <TouchableOpacity
+              style={[styles.homeButton, { backgroundColor: colors.primary }]}
+              onPress={() => router.replace(`/(customer)/payments/checkout?bookingId=${(paymentInfo as any)?.bookingId}`)}
+            >
+              <Text style={styles.homeButtonText}>Pay Now</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.homeButton, { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.primary }]}
+              onPress={() => router.push('/(customer)/bookings')}
+            >
+              <Text style={[styles.homeButtonText, { color: colors.primary }]}>Pay Later (Go to my Bookings)</Text>
+            </TouchableOpacity>
+          </View>
         </MotiView>
       </View>
     );

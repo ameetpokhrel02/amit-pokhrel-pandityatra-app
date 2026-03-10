@@ -173,12 +173,6 @@ function LayoutContent() {
           }}
         />
         <Tabs.Screen
-          name="payments/checkout"
-          options={{
-            href: null
-          }}
-        />
-        <Tabs.Screen
           name="video"
           options={{
             href: null

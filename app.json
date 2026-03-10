@@ -17,10 +17,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#FFF7ED",
         "foregroundImage": "./assets/images/pandit-logo.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#FFF7ED"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -68,7 +66,11 @@
     "extra": {
       "expoPublicGoogleClientId": "41836230258-6uc1on3m9c4va73ltdpg8b121rj68d3n.apps.googleusercontent.com",
       "androidClientId": "YOUR_ANDROID_CLIENT_ID_HERE",
-      "webClientId": "41836230258-6uc1on3m9c4va73ltdpg8b121rj68d3n.apps.googleusercontent.com"
+      "webClientId": "41836230258-6uc1on3m9c4va73ltdpg8b121rj68d3n.apps.googleusercontent.com",
+      "router": {},
+      "eas": {
+        "projectId": "09230ecd-edac-4390-a27a-0afd616923c7"
+      }
     }
   }
 }
