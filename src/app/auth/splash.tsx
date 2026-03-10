@@ -51,17 +51,17 @@ export default function SplashScreen() {
                             router.replace('/(customer)' as any);
                         }
                     } catch (e) {
-                        console.log('Splash: Token invalid, clearing and going Welcome');
+                        console.log('Splash: Token invalid, clearing and going Login');
                         await AsyncStorage.multiRemove(['access_token', 'refresh_token', 'user', 'role']);
-                        router.replace('/auth/welcome' as any);
+                        router.replace('/auth/login' as any);
                     }
                 } else {
-                    console.log('Splash: No token, going Welcome');
-                    router.replace('/auth/welcome' as any);
+                    console.log('Splash: No token, going Login');
+                    router.replace('/auth/login' as any);
                 }
             } catch (error) {
                 console.error('Splash navigation error:', error);
-                router.replace('/auth/welcome' as any);
+                router.replace('/auth/login' as any);
             }
         };
 

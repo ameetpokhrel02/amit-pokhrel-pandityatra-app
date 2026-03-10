@@ -95,6 +95,31 @@ export default function BookingsScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Quick Action Buttons for Payment and Video Call */}
+        {item.status !== 'CANCELLED' && (
+          <View style={styles.quickActionRow}>
+            {!item.payment_status && (
+              <TouchableOpacity
+                style={[styles.quickActionButton, { backgroundColor: '#F59E0B' }]}
+                onPress={() => router.push(`/(customer)/payments/checkout?bookingId=${item.id}` as any)}
+              >
+                <Ionicons name="card" size={16} color="#FFF" />
+                <Text style={styles.quickActionText}>Pay Now</Text>
+              </TouchableOpacity>
+            )}
+
+            {(item.status === 'ACCEPTED' || item.status === 'PENDING') && (
+              <TouchableOpacity
+                style={[styles.quickActionButton, { backgroundColor: '#3B82F6', marginLeft: item.payment_status ? 0 : 8 }]}
+                onPress={() => router.push(`/(customer)/video/${item.id}` as any)}
+              >
+                <Ionicons name="videocam" size={16} color="#FFF" />
+                <Text style={styles.quickActionText}>Join Video Puja</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -249,6 +274,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     marginLeft: 6,
+  },
+  quickActionRow: {
+    flexDirection: 'row',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  quickActionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 6,
+  },
+  quickActionText: {
+    color: '#FFF',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
 

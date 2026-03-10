@@ -29,8 +29,7 @@ const GOOGLE_CLIENT_ID =
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [authType, setAuthType] = useState<"otp" | "password">("otp");
-  const [method, setMethod] = useState<"phone" | "email">("phone");
+  const [loginView, setLoginView] = useState<"main" | "phone" | "email">("main");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -108,53 +107,30 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       setLoading(true);
-      if (authType === 'otp') {
-        const identifier = method === 'email' ? email : phone;
-        if (!identifier) {
-          Alert.alert("Error", `Please enter your ${method}`);
+      if (loginView === 'phone') {
+        if (!phone || phone.length < 10) {
+          Alert.alert("Invalid Phone", "Please enter a valid phone number.");
           setLoading(false);
           return;
         }
 
-        if (method === 'phone') {
-          if (!phone || phone.length < 10) {
-            Alert.alert("Invalid Phone", "Please enter a valid phone number.");
-            setLoading(false);
-            return;
-          }
-        }
-
-        const formattedIdentifier = method === 'email' ? email : formattedPhone;
-
         await requestLoginOtp({
-          email: method === 'email' ? email : undefined,
-          phone_number: method === 'phone' ? formattedPhone : undefined
+          phone_number: formattedPhone
         });
 
         router.push({
           pathname: "/auth/otp",
-          params: { email: method === 'email' ? email : undefined, phone: method === 'phone' ? formattedPhone : undefined },
+          params: { phone: formattedPhone },
         });
-      } else {
-        // Password Login
-        const identifier = method === 'email' ? email : formattedPhone;
-        if (!identifier || !password) {
+      } else if (loginView === 'email') {
+        if (!email || !password) {
           Alert.alert("Error", "Please enter both credentials");
           setLoading(false);
           return;
         }
 
-        if (method === 'phone') {
-          if (!phone || phone.length < 10) {
-            Alert.alert("Invalid Phone", "Please enter a valid phone number.");
-            setLoading(false);
-            return;
-          }
-        }
-
-        const loginPayload = method === 'email' ? { email: identifier, password } : { phone_number: identifier, password };
         const { passwordLogin } = require('@/services/auth.service');
-        await passwordLogin(loginPayload);
+        await passwordLogin({ email, password });
         const user = await fetchProfile();
 
         // Update local state
@@ -191,6 +167,11 @@ export default function LoginScreen() {
     }
   };
 
+  const handleGuestLogin = async () => {
+    await AsyncStorage.multiRemove(['access_token', 'refresh_token', 'user', 'role']);
+    router.replace("/(customer)" as any);
+  };
+
   const handleGoogleLoginPress = () => {
     if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "GOOGLE_CLIENT_ID_NOT_SET") {
       Alert.alert(
@@ -223,122 +204,140 @@ export default function LoginScreen() {
             />
           </View>
 
-          <Text style={styles.title}>Login</Text>
-          <Text style={styles.subtitle}>Enter your details to login</Text>
+          {loginView === 'main' && (
+            <>
+              <Text style={styles.title}>PanditYatra</Text>
+              <Text style={styles.subtitle}>Connecting Faith with Excellence</Text>
 
-          {/* Auth Type Toggle */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tab, authType === 'otp' && styles.activeTab]}
-              onPress={() => setAuthType('otp')}
-            >
-              <Text style={[styles.tabText, authType === 'otp' && styles.activeTabText]}>OTP Login</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, authType === 'password' && styles.activeTab]}
-              onPress={() => setAuthType('password')}
-            >
-              <Text style={[styles.tabText, authType === 'password' && styles.activeTabText]}>Password</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.methodContainer}>
-            <Button
-              title="Phone"
-              variant={method === "phone" ? "primary" : "outline"}
-              onPress={() => setMethod("phone")}
-              style={styles.methodButton}
-            />
-            <Button
-              title="Email"
-              variant={method === "email" ? "primary" : "outline"}
-              onPress={() => setMethod("email")}
-              style={styles.methodButton}
-            />
-          </View>
-
-          {method === "phone" ? (
-            <View style={styles.phoneInputContainer}>
-              <Text style={styles.inputLabel}>Phone Number</Text>
-              <CustomPhoneInput
-                value={phone}
-                onChangeText={setPhone}
-                onFormattedChange={setFormattedPhone}
+              <Button
+                title="Continue with Phone"
+                onPress={() => setLoginView('phone')}
+                style={styles.mainButton}
+                leftIcon={<Ionicons name="call-outline" size={20} color="#FFF" />}
               />
-            </View>
-          ) : (
-            <Input
-              label="Email Address"
-              placeholder="anita@email.com"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              leftIcon={<Ionicons name="mail-outline" size={20} color="#6B7280" />}
-            />
+
+              <Button
+                title="Continue with Email"
+                variant="outline"
+                onPress={() => setLoginView('email')}
+                style={styles.mainButton}
+                leftIcon={<Ionicons name="mail-outline" size={20} color={Colors.light.primary} />}
+              />
+
+              <View style={styles.orRow}>
+                <View style={styles.orLine} />
+                <Text style={styles.orText}>OR</Text>
+                <View style={styles.orLine} />
+              </View>
+
+              <Button
+                title="Continue with Google"
+                variant="outline"
+                onPress={handleGoogleLoginPress}
+                style={styles.googleButton}
+                leftIcon={<Ionicons name="logo-google" size={18} color="#4285F4" />}
+              />
+
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Don't have an account? </Text>
+                <Text
+                  style={styles.link}
+                  onPress={() => router.push("/auth/customer-register" as any)}
+                >
+                  Sign up
+                </Text>
+              </View>
+
+              <TouchableOpacity style={styles.guestButton} onPress={handleGuestLogin}>
+                <Text style={styles.guestButtonText}>Explore as Guest <Ionicons name="arrow-forward" size={14} /></Text>
+              </TouchableOpacity>
+            </>
           )}
 
-          {authType === 'password' && (
-            <Input
-              label="Password"
-              placeholder="••••••••"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              style={{ marginTop: 12 }}
-              leftIcon={<Ionicons name="lock-closed-outline" size={20} color="#6B7280" />}
-              rightIcon={
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons
-                    name={showPassword ? "eye-off-outline" : "eye-outline"}
-                    size={20}
-                    color="#6B7280"
-                  />
-                </TouchableOpacity>
-              }
-            />
+          {loginView === 'phone' && (
+            <>
+              <Text style={styles.title}>Login</Text>
+              <Text style={styles.subtitle}>We will send you an OTP to verify.</Text>
+
+              <View style={styles.phoneInputContainer}>
+                <Text style={styles.inputLabel}>Phone Number</Text>
+                <CustomPhoneInput
+                  value={phone}
+                  onChangeText={setPhone}
+                  onFormattedChange={setFormattedPhone}
+                />
+              </View>
+
+              <Button
+                title={loading ? "Sending..." : "Send OTP"}
+                onPress={handleLogin}
+                isLoading={loading}
+                disabled={loading || phone.length < 10}
+                style={styles.submitButton}
+              />
+
+              <TouchableOpacity style={styles.backLinkContainer} onPress={() => setLoginView('main')}>
+                <Text style={styles.backLink}>Back to Options</Text>
+              </TouchableOpacity>
+            </>
           )}
 
-          <View style={styles.forgotPasswordContainer}>
-            <Text
-              style={styles.forgotPasswordLink}
-              onPress={() => router.push("/auth/forgot-password" as any)}
-            >
-              Forgot Password?
-            </Text>
-          </View>
+          {loginView === 'email' && (
+            <>
+              <Text style={styles.title}>Login</Text>
+              <Text style={styles.subtitle}>Enter your credentials to continue.</Text>
 
-          <Button
-            title={loading ? "Logging in..." : (authType === 'otp' ? "Send OTP" : "Login")}
-            onPress={handleLogin}
-            isLoading={loading}
-            disabled={loading}
-            style={styles.submitButton}
-          />
+              <Input
+                label="Email Address"
+                placeholder="anita@email.com"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                leftIcon={<Ionicons name="mail-outline" size={20} color="#6B7280" />}
+              />
 
-          <View style={styles.orRow}>
-            <View style={styles.orLine} />
-            <Text style={styles.orText}>OR</Text>
-            <View style={styles.orLine} />
-          </View>
+              <Input
+                label="Password"
+                placeholder="••••••••"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                style={{ marginTop: 12 }}
+                leftIcon={<Ionicons name="lock-closed-outline" size={20} color="#6B7280" />}
+                rightIcon={
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                    <Ionicons
+                      name={showPassword ? "eye-off-outline" : "eye-outline"}
+                      size={20}
+                      color="#6B7280"
+                    />
+                  </TouchableOpacity>
+                }
+              />
 
-          <Button
-            title="Continue with Google"
-            variant="outline"
-            onPress={handleGoogleLoginPress}
-            style={styles.googleButton}
-            leftIcon={<Ionicons name="logo-google" size={18} color="#4285F4" />}
-          />
+              <View style={styles.forgotPasswordContainer}>
+                <Text
+                  style={styles.forgotPasswordLink}
+                  onPress={() => router.push("/auth/forgot-password" as any)}
+                >
+                  Forgot Password?
+                </Text>
+              </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
-            <Text
-              style={styles.link}
-              onPress={() => router.push("/auth/customer-register" as any)}
-            >
-              Register
-            </Text>
-          </View>
+              <Button
+                title={loading ? "Logging in..." : "Login"}
+                onPress={handleLogin}
+                isLoading={loading}
+                disabled={loading || !email || !password}
+                style={styles.submitButton}
+              />
+
+              <TouchableOpacity style={styles.backLinkContainer} onPress={() => setLoginView('main')}>
+                <Text style={styles.backLink}>Back to Options</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -502,5 +501,27 @@ const styles = StyleSheet.create({
   phoneFlagButton: {
     borderRightWidth: 1,
     borderRightColor: '#E5E7EB',
+  },
+  mainButton: {
+    marginBottom: 12,
+  },
+  guestButton: {
+    marginTop: 24,
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  guestButtonText: {
+    color: '#6B7280',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  backLinkContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  backLink: {
+    color: '#6B7280',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
