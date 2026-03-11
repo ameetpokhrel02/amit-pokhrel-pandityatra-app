@@ -87,3 +87,13 @@ export async function fetchPujaCatalog(): Promise<Puja[]> {
   const response = await publicApi.get('/pandits/services/catalog/');
   return response.data;
 }
+
+export async function fetchWalletBalance() {
+  const response = await apiClient.get('/pandits/wallet/');
+  return response.data;
+}
+
+export async function requestWithdrawal(payload: { amount: number; bank_details: string }) {
+  const response = await apiClient.post('/pandits/withdrawal/request/', payload);
+  return response.data;
+}

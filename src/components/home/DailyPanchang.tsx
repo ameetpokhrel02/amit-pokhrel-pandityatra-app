@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ImageBackground, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { useTheme } from '@/store/ThemeContext';
@@ -50,139 +51,184 @@ export const DailyPanchang = () => {
 
   const sunrise = data?.sunrise || '—';
   const sunset = data?.sunset || '—';
-  const tithi = data?.tithi || 'Panchang';
+  const tithi = data?.tithi || '—';
+  const nakshatra = data?.nakshatra || '—';
+  const yoga = data?.yoga || '—';
+  const auspicious = data?.auspicious_time || '—';
+  const nepaliDate = data?.nepali_date || '—';
+
+  const router = useRouter();
 
   return (
-    <MotiView
-      from={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ type: 'timing', duration: 600, delay: 200 }}
-      style={[styles.container, { backgroundColor: colors.card }]}
-    >
-      <ImageBackground
-        source={{
-          uri: 'https://images.unsplash.com/photo-1604881991720-f91add269ed8?q=80&w=1000&auto=format&fit=crop',
-        }}
-        style={[styles.background, { backgroundColor: isDark ? '#333' : '#FFF7ED' }]}
-        imageStyle={{ borderRadius: 16, opacity: 0.15 }}
+    <View style={styles.sectionContainer}>
+      <MotiView
+        from={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'timing', duration: 600, delay: 200 }}
+        style={styles.panchangCard}
       >
-        <View style={styles.header}>
-          <View style={styles.dateContainer}>
-            <Text style={[styles.dateText, { color: isDark ? '#AAA' : '#666' }]}>{dateString}</Text>
-            <Text style={[styles.tithiText, { color: colors.primary }]}>{tithi}</Text>
+        <View style={styles.mainDateRow}>
+          <View style={styles.calendarGraphic}>
+            <View style={styles.calendarHeader}>
+              <Text style={styles.calendarMonthText}>{today.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}</Text>
+            </View>
+            <View style={styles.calendarBody}>
+              <Text style={styles.calendarDayText}>{today.getDate()}</Text>
+            </View>
           </View>
-          <View style={styles.iconContainer}>
-            <Ionicons name="sunny" size={24} color={colors.primary} />
+          
+          <View style={styles.dateInfoContainer}>
+            <Text style={styles.nepaliDateBig}>{nepaliDate}</Text>
+            <View style={styles.tithiBadge}>
+              <Text style={styles.tithiText}>{tithi}</Text>
+            </View>
           </View>
         </View>
 
-        <View style={[styles.divider, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]} />
+        <View style={styles.divider} />
 
         {loading ? (
-          <View style={styles.loadingRow}>
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: isDark ? '#AAA' : '#666' }]}>Loading Panchang…</Text>
-          </View>
-        ) : error ? (
-          <View style={styles.loadingRow}>
-            <Ionicons name="warning-outline" size={16} color={colors.primary} />
-            <Text style={[styles.loadingText, { color: isDark ? '#AAA' : '#666' }]}>{error}</Text>
-          </View>
+          <ActivityIndicator size="small" color="#F97316" style={{ marginVertical: 10 }} />
         ) : (
-          <View style={styles.detailsRow}>
-            <View style={styles.detailItem}>
-              <Ionicons name="sunny-outline" size={16} color={isDark ? '#AAA' : '#666'} />
-              <Text style={[styles.detailLabel, { color: isDark ? '#AAA' : '#999' }]}>Sunrise</Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>{sunrise}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Ionicons name="moon-outline" size={16} color={isDark ? '#AAA' : '#666'} />
-              <Text style={[styles.detailLabel, { color: isDark ? '#AAA' : '#999' }]}>Sunset</Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>{sunset}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Ionicons name="star-outline" size={16} color={isDark ? '#AAA' : '#666'} />
-              <Text style={[styles.detailLabel, { color: isDark ? '#AAA' : '#999' }]}>Nakshatra</Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>
-                {data?.nakshatra || '—'}
-              </Text>
+          <View style={styles.detailsGrid}>
+            <View style={styles.gridRow}>
+              <PanchangItem label="Nakshatra" value={nakshatra} />
+              <PanchangItem label="Sunrise" value={sunrise} />
+              <PanchangItem label="Sunset" value={sunset} />
             </View>
           </View>
         )}
-      </ImageBackground>
-    </MotiView>
+
+        <TouchableOpacity 
+          style={styles.viewFullBtn}
+          onPress={() => router.push('/(customer)/panchang' as any)}
+        >
+          <Text style={styles.viewFullBtnText}>View Full Panchang</Text>
+          <Ionicons name="chevron-forward" size={16} color="#F97316" />
+        </TouchableOpacity>
+      </MotiView>
+    </View>
   );
 };
 
+const PanchangItem = ({ label, value }: any) => (
+  <View style={styles.detailItem}>
+    <Text style={styles.detailLabel}>{label}</Text>
+    <Text style={styles.detailValue} numberOfLines={1}>{value}</Text>
+  </View>
+);
+
 const styles = StyleSheet.create({
-  container: {
-    marginHorizontal: 20,
-    marginBottom: 24,
-    borderRadius: 16,
+  sectionContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  panchangCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
     elevation: 3,
-    overflow: 'hidden',
   },
-  background: {
-    padding: 16,
-  },
-  header: {
+  mainDateRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    gap: 20,
+    marginBottom: 16,
   },
-  dateContainer: {
-    flex: 1,
+  calendarGraphic: {
+    width: 70,
+    height: 80,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  dateText: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 2,
+  calendarHeader: {
+    backgroundColor: '#EF4444',
+    paddingVertical: 4,
+    alignItems: 'center',
   },
-  tithiText: {
-    fontSize: 18,
+  calendarMonthText: {
+    color: '#FFF',
+    fontSize: 12,
     fontWeight: 'bold',
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+  calendarBody: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#FFF',
+  },
+  calendarDayText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  dateInfoContainer: {
+    flex: 1,
+  },
+  nepaliDateBig: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  tithiBadge: {
+    backgroundColor: '#F9731615',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  tithiText: {
+    color: '#F97316',
+    fontSize: 14,
+    fontWeight: '700',
   },
   divider: {
     height: 1,
-    marginBottom: 12,
+    backgroundColor: '#F3F4F6',
+    marginBottom: 16,
   },
-  detailsRow: {
+  detailsGrid: {
+    marginBottom: 16,
+  },
+  gridRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  loadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 8,
-  },
-  loadingText: {
-    fontSize: 13,
+    gap: 12,
   },
   detailItem: {
-    alignItems: 'center',
     flex: 1,
   },
   detailLabel: {
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 11,
+    color: '#666',
     marginBottom: 2,
+    textTransform: 'uppercase',
   },
   detailValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#000',
+  },
+  viewFullBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  viewFullBtnText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#F97316',
   },
 });

@@ -221,13 +221,14 @@ function LayoutContent() {
           }}
         />
       </Tabs>
-      <FloatingChatButton onPress={() => openChat()} />
-      <ChatModal
+      {/* Hiding floating chat button as it blocks the tab bar */}
+      {/* <FloatingChatButton onPress={() => openChat()} /> */}
+      {/* <ChatModal
         visible={chatVisible}
         onClose={closeChat}
         bookingId={bookingId}
         panditName={panditName}
-      />
+      /> */}
     </>
   );
 }

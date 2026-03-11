@@ -59,6 +59,16 @@ export async function cancelBooking(id: number, reason?: string) {
     return response.data;
 }
 
+export async function updateBooking(id: number, data: Partial<BookingPayload>) {
+    const response = await apiClient.put(`/bookings/${id}/`, data);
+    return response.data;
+}
+
+export async function deleteBooking(id: number) {
+    const response = await apiClient.delete(`/bookings/${id}/`);
+    return response.data;
+}
+
 
 
 // Services functions moved to puja.service.ts

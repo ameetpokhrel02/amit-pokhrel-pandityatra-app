@@ -11,7 +11,10 @@ import { MotiView } from 'moti';
 import { DailyPanchang } from '@/components/home/DailyPanchang';
 import { useTranslation } from 'react-i18next';
 import { fetchServices } from '@/services/puja.service';
-import { Service } from '@/services/api';
+import { fetchPandits } from '@/services/pandit.service';
+import { fetchMyBookings } from '@/services/booking.service';
+import { fetchBookingSamagriRecommendations } from '@/services/recommender.service';
+import { Service, Pandit, Booking, SamagriItem } from '@/services/api';
 
 export default function CustomerHomeScreen() {
   const router = useRouter();
@@ -21,170 +24,223 @@ export default function CustomerHomeScreen() {
   const isDark = theme === 'dark';
 
   const [services, setServices] = useState<Service[]>([]);
+  const [pandits, setPandits] = useState<Pandit[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [recommendations, setRecommendations] = useState<SamagriItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadFeaturedServices();
+    loadHomeData();
   }, []);
 
-  const loadFeaturedServices = async () => {
+  const loadHomeData = async () => {
     try {
-      const data = await fetchServices();
-      setServices(data);
+      setLoading(true);
+      const [servicesData, panditsData, bookingsData] = await Promise.all([
+        fetchServices(),
+        fetchPandits(),
+        fetchMyBookings({ status: 'PENDING' }),
+      ]);
+      setServices(servicesData.slice(0, 6));
+      setPandits(panditsData.slice(0, 6));
+      setBookings(bookingsData);
+
+      if (bookingsData.length > 0) {
+        try {
+          const recoData = await fetchBookingSamagriRecommendations(bookingsData[0].id);
+          setRecommendations(recoData);
+        } catch (recoErr) {
+          console.warn("Could not fetch recommendations", recoErr);
+        }
+      }
     } catch (error) {
-      console.error("Failed to load services", error);
+      console.error("Failed to load home data", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Mock upcoming booking
-  const upcomingBooking = {
-    id: 'bk_123',
-    service: 'Satyanarayan Puja',
-    date: '2024-03-15',
-    time: '09:00 AM',
-    pandit: 'Pt. Sharma',
-    status: 'confirmed'
-  };
+  const upcomingBooking = bookings.length > 0 ? bookings[0] : null;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity>
-            <Ionicons name="menu-outline" size={28} color={colors.text} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/(customer)/profile')}>
-            {user?.photoUri ? (
-              <Image source={{ uri: user.photoUri }} style={styles.profileImage} />
-            ) : (
-              <View style={[styles.profileImagePlaceholder, { backgroundColor: colors.primary }]}>
-                <Text style={styles.profileInitials}>{user?.name?.[0]?.toUpperCase() || 'G'}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+    <View style={[styles.container, { backgroundColor: '#FFF7ED' }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={[styles.greeting, { color: '#000' }]}>Namaste, {user?.name || 'Amit'} 🙏</Text>
+          <Text style={[styles.subGreeting, { color: '#666' }]}>Book authentic Vedic pujas</Text>
+        </View>
+      </View>
+
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero Banner */}
+        <View style={styles.heroBanner}>
+          <View style={styles.heroTextContent}>
+            <Text style={styles.heroTitle}>Welcome to PanditYatra</Text>
+            <Text style={styles.heroSubtitle}>Book trusted pandits{"\n"}for your pujas anytime</Text>
+            <TouchableOpacity 
+              style={styles.heroButton}
+              onPress={() => router.push('/(customer)/services')}
+            >
+              <Text style={styles.heroButtonText}>Book Puja</Text>
+            </TouchableOpacity>
+          </View>
+          <Image
+            source={require('@/assets/images/hero_3_photoroom.png')}
+            style={styles.heroImage}
+            contentFit="contain"
+          />
         </View>
 
-        {/* Greeting */}
-        <MotiView
-          from={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 500 }}
-          style={styles.greetingSection}
-        >
-          <Text style={[styles.greetingTitle, { color: colors.text }]}>{t('welcome')}, {user?.name || 'Guest'}!</Text>
-          <Text style={[styles.greetingSubtitle, { color: isDark ? '#AAA' : '#666' }]}>{t('greetingSubtitle')}</Text>
-        </MotiView>
+        {/* Quick Actions Grid */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.quickActionsGrid2x3}>
+            <QuickActionItem
+              title="Book Puja"
+              icon="color-filter-outline"
+              color="#F97316"
+              onPress={() => router.push('/(customer)/services')}
+            />
+            <QuickActionItem
+              title="Find Pandit"
+              icon="people-outline"
+              color="#F97316"
+              onPress={() => router.push('/(customer)/pandits')}
+            />
+            <QuickActionItem
+              title="Shop Samagri"
+              icon="basket-outline"
+              color="#F97316"
+              onPress={() => router.push('/(customer)/shop')}
+            />
+            <QuickActionItem
+              title="Kundali"
+              icon="sparkles-outline"
+              color="#F97316"
+              onPress={() => router.push('/(customer)/kundali')}
+            />
+            <QuickActionItem
+              title="Panchang"
+              icon="calendar-outline"
+              color="#F97316"
+              onPress={() => router.push('/(customer)/panchang' as any)}
+            />
+            <QuickActionItem
+              title="Ask AI"
+              icon="chatbubbles-outline"
+              color="#F97316"
+              onPress={() => router.push('/(customer)/chat')}
+            />
+          </View>
+        </View>
 
-        {/* Daily Panchang Widget */}
+        {/* Today's Panchang Widget */}
         <DailyPanchang />
 
         {/* Featured Services */}
         <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Sacred Pujas</Text>
-          {loading ? (
-            <ActivityIndicator size="small" color="#D97706" />
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalList}>
-              {services.map((service, index) => (
-                <MotiView
-                  key={service.id}
-                  from={{ opacity: 0, scale: 0.9, translateY: 10 }}
-                  animate={{ opacity: 1, scale: 1, translateY: 0 }}
-                  transition={{ delay: index * 100, type: 'timing', duration: 400 }}
-                >
-                  <TouchableOpacity
-                    style={[styles.serviceCard, { backgroundColor: isDark ? '#2D2D2D' : '#FFF', borderColor: isDark ? '#444' : '#FDE68A' }]}
-                    onPress={() => router.push(`/(customer)/services/${service.id}`)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={[styles.serviceIcon, { backgroundColor: isDark ? '#3D3D3D' : '#FEF3C7' }]}>
-                      {service.image ? (
-                        <Image
-                          source={{ uri: service.image }}
-                          style={styles.serviceImage}
-                          contentFit="cover"
-                        />
-                      ) : (
-                        <View style={[styles.fallbackIcon]}>
-                          <Ionicons name="sparkles-outline" size={32} color="#D97706" />
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.serviceInfo}>
-                      <Text style={[styles.serviceName, { color: colors.text }]} numberOfLines={2}>
-                        {service.name}
-                      </Text>
-                      <View style={[styles.priceBadge, { backgroundColor: '#FEF3C7' }]}>
-                        <Text style={[styles.priceText, { color: '#D97706' }]}>
-                          NPR {service.base_price}
-                        </Text>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                </MotiView>
-              ))}
-            </ScrollView>
-          )}
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Featured Pujas</Text>
+            <TouchableOpacity onPress={() => router.push('/(customer)/services' as any)}>
+              <Text style={[styles.seeAll, { color: '#F97316' }]}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalList}>
+            {services.map((service, index) => (
+              <ServiceCard key={service.id} service={service} index={index} colors={colors} isDark={isDark} router={router} />
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Top Pandits */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Top Pandits Near You</Text>
+            <TouchableOpacity onPress={() => router.push('/(customer)/pandits' as any)}>
+              <Text style={[styles.seeAll, { color: '#F97316' }]}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalList}>
+            {pandits.map((pandit, index) => (
+              <PanditCard key={pandit.id} pandit={pandit} index={index} colors={colors} isDark={isDark} router={router} />
+            ))}
+          </ScrollView>
         </View>
 
         {/* Upcoming Booking Card */}
-        <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Next Ritual</Text>
-          <MotiView
-            from={{ opacity: 0, translateY: 20 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ delay: 300 }}
-            style={[styles.bookingCard, { backgroundColor: colors.card, borderLeftColor: '#D97706' }]}
-          >
-            <View style={styles.bookingHeader}>
-              <View>
-                <Text style={[styles.bookingService, { color: colors.text }]}>{upcomingBooking.service}</Text>
-                <Text style={[styles.bookingPandit, { color: isDark ? '#AAA' : '#666' }]}>with {upcomingBooking.pandit}</Text>
+        {upcomingBooking && (
+          <View style={styles.sectionContainer}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Upcoming Puja</Text>
+            <MotiView
+              from={{ opacity: 0, translateY: 20 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ delay: 300 }}
+              style={[styles.bookingCard, { backgroundColor: '#FFF', borderLeftColor: '#F97316' }]}
+            >
+              <View style={styles.bookingHeader}>
+                <View>
+                  <Text style={[styles.bookingService, { color: '#000' }]}>{upcomingBooking.service_name}</Text>
+                  <Text style={[styles.bookingPandit, { color: '#666' }]}>with {upcomingBooking.pandit_full_name}</Text>
+                </View>
+                <View style={[styles.statusBadge, { backgroundColor: '#FFF7ED' }]}>
+                  <Text style={[styles.statusText, { color: '#F97316' }]}>{upcomingBooking.status}</Text>
+                </View>
               </View>
-              <View style={[styles.statusBadge, { backgroundColor: '#E8F5E9' }]}>
-                <Text style={[styles.statusText, { color: '#2E7D32' }]}>{upcomingBooking.status}</Text>
+              <View style={styles.bookingDetails}>
+                <View style={styles.bookingDetailItem}>
+                  <Ionicons name="calendar-outline" size={16} color="#F97316" />
+                  <Text style={[styles.bookingDetailText, { color: '#333' }]}>{upcomingBooking.booking_date}</Text>
+                </View>
+                <View style={styles.bookingDetailItem}>
+                  <Ionicons name="time-outline" size={16} color="#F97316" />
+                  <Text style={[styles.bookingDetailText, { color: '#333' }]}>{upcomingBooking.booking_time}</Text>
+                </View>
               </View>
-            </View>
-            <View style={styles.bookingDetails}>
-              <View style={styles.bookingDetailItem}>
-                <Ionicons name="calendar-outline" size={16} color={colors.primary} />
-                <Text style={[styles.bookingDetailText, { color: colors.text }]}>{upcomingBooking.date}</Text>
-              </View>
-              <View style={styles.bookingDetailItem}>
-                <Ionicons name="time-outline" size={16} color={colors.primary} />
-                <Text style={[styles.bookingDetailText, { color: colors.text }]}>{upcomingBooking.time}</Text>
-              </View>
-            </View>
-            <TouchableOpacity style={[styles.viewBookingButton, { borderColor: colors.primary }]}>
-              <Text style={[styles.viewBookingText, { color: colors.primary }]}>View Details</Text>
-            </TouchableOpacity>
-          </MotiView>
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
-          <View style={styles.quickActionsGrid}>
-            <QuickActionData
-              title="Book Puja"
-              icon="flame"
-              color="#FF9800"
-              onPress={() => router.push('/(customer)/services')}
-              colors={colors}
-              isDark={isDark}
-            />
-            <QuickActionData
-              title="Shop Samagri"
-              icon="basket"
-              color="#2196F3"
-              onPress={() => router.push('/(customer)/shop')}
-              colors={colors}
-              isDark={isDark}
-            />
+              <TouchableOpacity 
+                style={[styles.viewBookingButton, { borderColor: '#F97316' }]}
+                onPress={() => router.push(`/(customer)/bookings/${upcomingBooking.id}` as any)}
+              >
+                <Text style={[styles.viewBookingText, { color: '#F97316' }]}>Join Puja</Text>
+              </TouchableOpacity>
+            </MotiView>
           </View>
+        )}
+
+        {/* AI Samagri Recommended Section */}
+        {recommendations.length > 0 && upcomingBooking && (
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: '#000' }]}>Recommended Samagri for {upcomingBooking.service_name}</Text>
+              <TouchableOpacity onPress={() => router.push('/(customer)/shop' as any)}>
+                <Text style={[styles.seeAll, { color: '#F97316' }]}>Shop All</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalList}>
+              {recommendations.map((item, idx) => (
+                <TouchableOpacity key={item.id} style={[styles.recoCard, { backgroundColor: '#FFF' }]}>
+                  <Image source={{ uri: item.image }} style={styles.recoImage} />
+                  <Text style={[styles.recoName, { color: '#000' }]} numberOfLines={1}>{item.name}</Text>
+                  <Text style={styles.recoPrice}>NPR {item.price}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Spiritual Quote */}
+        <View style={[styles.sectionContainer, styles.quoteSection]}>
+          <MotiView
+            from={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={styles.quoteCard}
+          >
+            <Text style={styles.quoteText}>
+              "Faith and devotion bring peace{"\n"}to the mind and soul."
+            </Text>
+          </MotiView>
         </View>
 
       </ScrollView>
@@ -192,16 +248,73 @@ export default function CustomerHomeScreen() {
   );
 }
 
-function QuickActionData({ title, icon, color, onPress, colors, isDark }: any) {
+function ServiceCard({ service, index, colors, isDark, router }: any) {
+  return (
+    <MotiView
+      from={{ opacity: 0, scale: 0.9, translateY: 10 }}
+      animate={{ opacity: 1, scale: 1, translateY: 0 }}
+      transition={{ delay: index * 100, type: 'timing', duration: 400 }}
+    >
+      <TouchableOpacity
+        style={[styles.serviceCard, { backgroundColor: isDark ? '#1F2937' : '#FFF', borderColor: isDark ? '#374151' : '#F3F4F6' }]}
+        onPress={() => router.push(`/(customer)/services/${service.id}`)}
+        activeOpacity={0.7}
+      >
+        <Image
+          source={{ uri: service.image || 'https://images.unsplash.com/photo-1544158404-585ff67ece33?q=80&w=300' }}
+          style={styles.serviceImage}
+          contentFit="cover"
+        />
+        <View style={styles.serviceInfo}>
+          <Text style={[styles.serviceName, { color: colors.text }]} numberOfLines={1}>{service.name}</Text>
+          <Text style={styles.priceText}>NPR {service.base_price}</Text>
+        </View>
+      </TouchableOpacity>
+    </MotiView>
+  );
+}
+
+function PanditCard({ pandit, index, colors, isDark, router }: any) {
+  return (
+    <MotiView
+      from={{ opacity: 0, scale: 0.9, translateY: 10 }}
+      animate={{ opacity: 1, scale: 1, translateY: 0 }}
+      transition={{ delay: index * 100, type: 'timing', duration: 400 }}
+    >
+      <TouchableOpacity
+        style={[styles.panditCard, { backgroundColor: isDark ? '#1F2937' : '#FFF', borderColor: isDark ? '#374151' : '#F3F4F6' }]}
+        onPress={() => router.push(`/(customer)/pandit/${pandit.id}`)}
+        activeOpacity={0.7}
+      >
+        <Image
+          source={{ uri: pandit.user_details?.profile_pic_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200' }}
+          style={styles.panditImage}
+          contentFit="cover"
+        />
+        <View style={styles.panditInfo}>
+          <Text style={[styles.panditName, { color: colors.text }]} numberOfLines={1}>{pandit.user_details?.full_name}</Text>
+          <View style={styles.ratingRow}>
+            <Ionicons name="star" size={14} color="#F59E0B" />
+            <Text style={styles.ratingText}>{pandit.rating || '4.5'}</Text>
+            <Text style={styles.experienceText}>• {pandit.experience_years}y exp</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </MotiView>
+  );
+}
+
+function QuickActionItem({ title, icon, color, onPress }: any) {
   return (
     <TouchableOpacity
-      style={[styles.quickActionCard, { backgroundColor: colors.card }]}
+      style={styles.quickActionItem}
       onPress={onPress}
+      activeOpacity={0.7}
     >
-      <View style={[styles.quickActionIcon, { backgroundColor: color + '20' }]}>
-        <Ionicons name={icon as any} size={32} color={color} />
+      <View style={[styles.quickActionIconSmall, { backgroundColor: '#FFF' }]}>
+        <Ionicons name={icon as any} size={28} color={color} />
       </View>
-      <Text style={[styles.quickActionTitle, { color: colors.text }]}>{title}</Text>
+      <Text style={styles.quickActionTitleSmall}>{title}</Text>
     </TouchableOpacity>
   );
 }
@@ -218,121 +331,224 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 50,
-    marginBottom: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: '#FFF7ED',
   },
-  profileImagePlaceholder: {
+  headerIcons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  iconBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
-  profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  profileInitials: {
-    color: '#FFF',
-    fontSize: 18,
+  greeting: {
+    fontSize: 20,
     fontWeight: 'bold',
   },
-  greetingSection: {
+  subGreeting: {
+    fontSize: 14,
+    marginTop: 2,
+  },
+  heroBanner: {
+    height: 220,
+    backgroundColor: '#FFF7ED',
+    marginHorizontal: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    marginBottom: 24,
+    overflow: 'hidden',
   },
-  greetingTitle: {
-    fontSize: 28,
+  heroTextContent: {
+    flex: 1,
+    zIndex: 1,
+  },
+  heroTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#F97316',
+  },
+  heroSubtitle: {
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 4,
+    color: '#000',
+    marginTop: 8,
+    lineHeight: 30,
   },
-  greetingSubtitle: {
+  heroButton: {
+    backgroundColor: '#F97316',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginTop: 20,
+    shadowColor: '#F97316',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  heroButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
     fontSize: 16,
   },
+  heroImage: {
+    width: 200,
+    height: 220,
+    position: 'absolute',
+    right: -20,
+    bottom: 0,
+  },
   sectionContainer: {
-    marginBottom: 24,
+    marginBottom: 32,
     paddingHorizontal: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
+    fontWeight: '700',
+  },
+  seeAll: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  quickActionsGrid2x3: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 16,
+    paddingVertical: 10,
+  },
+  quickActionItem: {
+    width: (Dimensions.get('window').width - 72) / 3,
+    alignItems: 'center',
+    gap: 8,
+  },
+  quickActionIconSmall: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quickActionTitleSmall: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#333',
+    textAlign: 'center',
+    marginTop: 4,
   },
   horizontalList: {
     marginHorizontal: -20,
     paddingHorizontal: 20,
   },
   serviceCard: {
-    width: 160,
-    backgroundColor: '#FFF',
+    width: 220,
     borderRadius: 24,
     marginRight: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
+    overflow: 'hidden',
+    backgroundColor: '#FFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 12,
-    elevation: 3,
-  },
-  serviceIcon: {
-    width: '100%',
-    height: 100,
-    borderRadius: 18,
-    overflow: 'hidden',
-    marginBottom: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    elevation: 4,
   },
   serviceImage: {
     width: '100%',
-    height: '100%',
-  },
-  fallbackIcon: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
+    height: 130,
   },
   serviceInfo: {
-    gap: 6,
+    padding: 16,
   },
   serviceName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
-    lineHeight: 20,
-  },
-  priceBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(217, 119, 6, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    marginBottom: 6,
   },
   priceText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '800',
+    color: '#F97316',
+  },
+  panditCard: {
+    width: 170,
+    borderRadius: 24,
+    marginRight: 16,
+    padding: 16,
+    backgroundColor: '#FFF',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  panditImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 12,
+  },
+  panditInfo: {
+    alignItems: 'center',
+  },
+  panditName: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#4B5563',
+  },
+  experienceText: {
+    fontSize: 11,
+    color: '#6B7280',
   },
   bookingCard: {
-    padding: 16,
-    borderRadius: 16,
-    borderLeftWidth: 4,
+    padding: 20,
+    borderRadius: 24,
+    borderLeftWidth: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 15,
+    elevation: 6,
   },
   bookingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   bookingService: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: 'bold',
     marginBottom: 4,
   },
@@ -340,67 +556,91 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
   statusText: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
   bookingDetails: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 16,
+    gap: 20,
+    marginBottom: 20,
   },
   bookingDetailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   bookingDetailText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   viewBookingButton: {
-    borderWidth: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
+    borderWidth: 1.5,
+    paddingVertical: 12,
+    borderRadius: 14,
     alignItems: 'center',
   },
   viewBookingText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
   },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  quickActionCard: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 16,
+  recoCard: {
+    width: 130,
+    borderRadius: 20,
+    padding: 12,
+    marginRight: 12,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
-    aspectRatio: 1, // Make it square-ish
-    justifyContent: 'center',
   },
-  quickActionIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
+  recoImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 14,
+    marginBottom: 10,
   },
-  quickActionTitle: {
-    fontSize: 14,
+  recoName: {
+    fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',
+    marginBottom: 4,
+  },
+  recoPrice: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#F97316',
+  },
+  quoteSection: {
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 30,
+  },
+  quoteCard: {
+    backgroundColor: '#FFF',
+    padding: 24,
+    borderRadius: 24,
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  quoteText: {
+    fontSize: 18,
+    fontWeight: '500',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    lineHeight: 28,
+    color: '#444',
   },
 });

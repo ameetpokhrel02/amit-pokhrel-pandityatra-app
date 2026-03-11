@@ -224,9 +224,13 @@ export interface VideoLinkResponse {
 
 export interface PanchangData {
     date: string;
+    nepali_date?: string;
     tithi?: string;
+    nakshatra?: string;
+    yoga?: string;
     sunrise?: string;
     sunset?: string;
+    auspicious_time?: string;
     [key: string]: any;
 }
 

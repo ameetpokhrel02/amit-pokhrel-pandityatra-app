@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import Constants from "expo-constants";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
+import * as Google from "expo-auth-session/providers/google";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -25,7 +26,11 @@ import { requestLoginOtp, googleLogin, fetchProfile } from "@/services/auth.serv
 WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
   (Constants.expoConfig?.extra as any)?.expoPublicGoogleClientId || "";
+
+const ANDROID_CLIENT_ID =
+  (Constants.expoConfig?.extra as any)?.androidClientId || "";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -37,17 +42,30 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [formattedPhone, setFormattedPhone] = useState("");
 
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: GOOGLE_CLIENT_ID || "GOOGLE_CLIENT_ID_NOT_SET",
-      responseType: AuthSession.ResponseType.IdToken,
-      scopes: ["profile", "email"],
-      redirectUri: AuthSession.makeRedirectUri(),
-    },
-    {
-      authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: GOOGLE_CLIENT_ID,
+    androidClientId: GOOGLE_CLIENT_ID, // Using the provided Web ID as a fallback or if it's dual-purpose
+    iosClientId: GOOGLE_CLIENT_ID,
+    webClientId: GOOGLE_CLIENT_ID,
+    responseType: AuthSession.ResponseType.IdToken,
+  });
+
+  useEffect(() => {
+    if (request) {
+      console.log("[Google Auth] Request URL:", request.url);
+      console.log("[Google Auth] Redirect URI:", request.redirectUri);
+      console.log("[Google Auth] Client ID used:", request.clientId);
     }
-  );
+  }, [request]);
+
+  useEffect(() => {
+    if (response) {
+      console.log("[Google Auth] Response received:", response.type);
+      if (response.type === "error") {
+        console.error("[Google Auth] Error details:", response.error);
+      }
+    }
+  }, [response]);
 
   useEffect(() => {
     // DEBUG: Check what URL we are hitting

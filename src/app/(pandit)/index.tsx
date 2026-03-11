@@ -6,6 +6,8 @@ import { useRouter } from 'expo-router';
 import { fetchProfile } from '@/services/auth.service';
 import { PanditService } from '@/services/api';
 import { togglePanditAvailability, fetchPanditMyServices } from '@/services/pandit.service';
+import { fetchNotifications, markNotificationAsRead, Notification } from '@/services/notification.service';
+import { joinVideoRoom } from '@/services/video.service';
 
 export default function PanditDashboardScreen() {
   const router = useRouter();
@@ -20,6 +22,7 @@ export default function PanditDashboardScreen() {
     earnings: '₹0',
     rating: '0.0'
   });
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const fetchData = async () => {
     try {
@@ -40,6 +43,9 @@ export default function PanditDashboardScreen() {
 
       const servicesData = await fetchPanditMyServices();
       setMyServices(servicesData);
+
+      const notificationsData = await fetchNotifications();
+      setNotifications(notificationsData);
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -65,6 +71,27 @@ export default function PanditDashboardScreen() {
     } catch (error) {
       console.error('Error toggling availability:', error);
       setIsAvailable(!value); // Revert on error
+    }
+  };
+
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      await markNotificationAsRead(id);
+      setNotifications(notifications.filter(n => n.id !== id));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const handleJoinVideo = async (bookingId: number) => {
+    try {
+      const response = await joinVideoRoom(bookingId);
+      if (response.room_url) {
+        // Navigation or opening URL logic here
+        console.log('Joining room:', response.room_url);
+      }
+    } catch (error) {
+      console.error('Error joining video room:', error);
     }
   };
 
@@ -144,8 +171,8 @@ export default function PanditDashboardScreen() {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionGrid}>
           <ActionButton label="Accept/Decline" icon="checkmark-done-circle-outline" onPress={() => router.push('/(pandit)/bookings')} />
-          <ActionButton label="Message" icon="chatbubble-ellipses-outline" onPress={() => { }} />
-          <ActionButton label="Join Video Puja" icon="videocam-outline" onPress={() => { }} />
+          <ActionButton label="Message" icon="chatbubble-ellipses-outline" onPress={() => router.push('/chat/rooms')} />
+          <ActionButton label="Join Video Puja" icon="videocam-outline" onPress={() => handleJoinVideo(0)} />
           <ActionButton label="Update Calendar" icon="calendar-outline" onPress={() => router.push('/(pandit)/calendar')} />
         </View>
       </View>
@@ -179,19 +206,35 @@ export default function PanditDashboardScreen() {
 
       {/* Notifications / Alerts */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Notifications</Text>
-        <View style={styles.alertCard}>
-          <View style={styles.alertIcon}>
-            <Ionicons name="notifications" size={20} color="#EF4444" />
-          </View>
-          <View style={styles.alertContent}>
-            <Text style={styles.alertTitle}>New Booking Request</Text>
-            <Text style={styles.alertMessage}>Anita Sharma requested Satyanarayan Puja.</Text>
-          </View>
-          <TouchableOpacity style={styles.alertAction}>
-            <Text style={styles.alertActionText}>View</Text>
-          </TouchableOpacity>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Notifications</Text>
+          {notifications.length > 0 && (
+            <TouchableOpacity onPress={() => router.push('/notifications' as any)}>
+              <Text style={styles.seeAll}>View All</Text>
+            </TouchableOpacity>
+          )}
         </View>
+        
+        {notifications.length > 0 ? (
+          notifications.slice(0, 3).map((notif) => (
+            <View key={notif.id} style={[styles.alertCard, { marginBottom: 8 }]}>
+              <View style={styles.alertIcon}>
+                <Ionicons name="notifications" size={20} color={notif.is_read ? "#9CA3AF" : "#EF4444"} />
+              </View>
+              <View style={styles.alertContent}>
+                <Text style={styles.alertTitle}>{notif.title}</Text>
+                <Text style={styles.alertMessage}>{notif.message}</Text>
+              </View>
+              <TouchableOpacity style={styles.alertAction} onPress={() => handleMarkAsRead(notif.id)}>
+                <Text style={styles.alertActionText}>Read</Text>
+              </TouchableOpacity>
+            </View>
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No new notifications.</Text>
+          </View>
+        )}
       </View>
     </ScrollView>
   );

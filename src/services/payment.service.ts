@@ -19,7 +19,7 @@ export interface PaymentIntentResponse {
 }
 
 export async function initiatePayment(payload: CreatePaymentPayload): Promise<PaymentIntentResponse> {
-    const response = await apiClient.post('/payments/initiate/', payload);
+    const response = await apiClient.post('/payments/create/', payload);
     return response.data;
 }
 
