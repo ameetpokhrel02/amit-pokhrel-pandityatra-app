@@ -123,3 +123,17 @@ export async function updateUserProfile(data: any) {
   const response = await apiClient.patch('/users/profile/', data);
   return response.data;
 }
+
+export async function contactUs(payload: { name: string; email: string; message: string }) {
+  try {
+    const response = await publicApi.post('/users/contact/', payload);
+    return response.data;
+  } catch (error: any) {
+    throw handleApiError(error);
+  }
+}
+
+export async function fetchSiteContent() {
+  const response = await publicApi.get('/users/site-content/');
+  return response.data;
+}

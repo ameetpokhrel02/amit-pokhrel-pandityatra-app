@@ -7,11 +7,13 @@ import { fetchChatRoomMessages, sendMessage, getAISuggestion } from '@/services/
 import { ChatMessage, ChatRoom } from '@/types/chat';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useTheme } from '@/store/ThemeContext';
+import { useUser } from '@/store/UserContext';
 
 export default function ChatRoomScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { colors, theme } = useTheme();
+  const { user } = useUser();
   const isDark = theme === 'dark';
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
@@ -32,7 +34,7 @@ export default function ChatRoomScreen() {
       // Check for AI suggestion based on last message
       if (data.length > 0) {
         const lastMsg = data[data.length - 1];
-        if (lastMsg.senderId !== 'u1') { // If last message is not from me
+        if (lastMsg.senderId !== user?.email && lastMsg.senderId !== 'u1') { // Flexible 'me' check
           const suggestion = await getAISuggestion(id, lastMsg.text);
           setAiSuggestion(suggestion);
         }
@@ -51,7 +53,7 @@ export default function ChatRoomScreen() {
     const optimisticMessage: ChatMessage = {
       id: tempId,
       chatId: id,
-      senderId: 'u1',
+      senderId: user?.email || 'u1',
       text: text,
       type: 'text',
       timestamp: Date.now(),
@@ -80,7 +82,8 @@ export default function ChatRoomScreen() {
       );
     }
 
-    const isMe = item.senderId === 'u1';
+    // Check if it's 'my' message. 
+    const isMe = item.senderId === user?.email || item.senderId === 'u1';
 
     return (
       <View style={[

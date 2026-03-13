@@ -56,7 +56,7 @@ export default function BookingsScreen() {
     return (
       <TouchableOpacity
         style={[styles.card, { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#000' }]}
-        onPress={() => router.push(`/(customer)/booking?id=${item.id}` as any)}
+        onPress={() => router.push(`/(customer)/bookings/${item.id}` as any)}
       >
         <View style={styles.cardHeader}>
           <Text style={[styles.serviceName, { color: colors.text }]}>

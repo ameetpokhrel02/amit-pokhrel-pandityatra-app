@@ -1,7 +1,7 @@
 export const Colors = {
   light: {
     primary: '#FF6F00', // Saffron
-    background: '#FFF7ED', // Cream (Orange 50)
+    background: '#F5F5F5', // Cream (User spec)
     card: '#FFFFFF',
     text: '#3E2723', // Dark Brown
     border: '#E5E5EA',

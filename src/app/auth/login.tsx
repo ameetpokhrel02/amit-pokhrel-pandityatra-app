@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { requestLoginOtp, googleLogin, fetchProfile } from "@/services/auth.service";
+import { requestLoginOtp, googleLogin, fetchProfile, passwordLogin } from "@/services/auth.service";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -147,7 +147,6 @@ export default function LoginScreen() {
           return;
         }
 
-        const { passwordLogin } = require('@/services/auth.service');
         await passwordLogin({ email, password });
         const user = await fetchProfile();
 
