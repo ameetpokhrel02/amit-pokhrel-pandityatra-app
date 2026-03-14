@@ -3,7 +3,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { ThemeProvider } from '@/store/ThemeContext';
-import { CartProvider } from '@/store/CartContext';
 import { useAuthStore } from '@/store/auth.store';
 import '@/i18n'; // Initialize i18n
 import '../../global.css'; // Import NativeWind styles
@@ -26,8 +25,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <CartProvider>
-        <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ headerShown: false }}>
           {/* Auth / startup routing */}
           <Stack.Screen name="index" />
           <Stack.Screen name="auth" />
@@ -44,7 +42,6 @@ export default function RootLayout() {
           {/* Admin dashboard */}
           <Stack.Screen name="admin/index" options={{ title: 'Admin Dashboard' }} />
         </Stack>
-      </CartProvider>
     </ThemeProvider>
   );
 }

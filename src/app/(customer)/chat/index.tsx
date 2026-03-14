@@ -7,6 +7,7 @@ import { fetchChatRooms } from '@/services/chat.service';
 import { ChatRoom } from '@/types/chat';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useTheme } from '@/store/ThemeContext';
+import { getImageUrl } from '@/utils/image';
 
 export default function ChatListScreen() {
   const router = useRouter();
@@ -40,7 +41,7 @@ export default function ChatListScreen() {
       >
         <View style={styles.avatarContainer}>
           {otherParticipant?.avatar ? (
-            <Image source={{ uri: otherParticipant.avatar }} style={styles.avatar} />
+            <Image source={{ uri: getImageUrl(otherParticipant.avatar) || '' }} style={styles.avatar} />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
               <Text style={styles.avatarText}>{otherParticipant?.name.charAt(0)}</Text>

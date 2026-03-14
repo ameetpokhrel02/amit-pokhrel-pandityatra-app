@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity, Image, Alert, TextInput, ScrollView } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { LogoutModal } from '@/components/ui/LogoutModal';
+import { DeleteAccountModal } from '@/components/ui/DeleteAccountModal';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/store/ThemeContext';
 import { useUser } from '@/store/UserContext';
@@ -12,6 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 import { fetchProfile } from '@/services/auth.service';
 import { fetchMyBookings } from '@/services/booking.service';
+import { getImageUrl } from '@/utils/image';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -20,6 +22,7 @@ export default function ProfileScreen() {
   const { t, i18n } = useTranslation();
   const isDark = theme === 'dark';
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
 
@@ -37,7 +40,7 @@ export default function ProfileScreen() {
           email: profileData.email,
           phone: profileData.phone_number,
           role: profileData.role,
-          photoUri: profileData.profile_image ? profileData.profile_image : null,
+          photoUri: getImageUrl(profileData.profile_image),
         } as any);
 
         const pending = bookingsData.filter(b => b.status === 'COMPLETED' && !b.is_reviewed);
@@ -69,6 +72,12 @@ export default function ProfileScreen() {
 
   const handleEditPress = () => {
     router.push('/(customer)/edit-profile' as any);
+  };
+
+  const handleDeleteAccount = async () => {
+    setShowDeleteModal(false);
+    // In a real app, call delete account service here
+    Alert.alert("Success", "Account deletion request submitted.");
   };
 
   const renderSettingItem = (icon: any, label: string, onPress?: () => void, rightElement?: React.ReactNode) => (
@@ -196,10 +205,7 @@ export default function ProfileScreen() {
         {renderSettingItem(
           "trash-outline", 
           "Delete account", 
-          () => Alert.alert("Delete Account", "Are you sure you want to delete your account? This action is irreversible.", [
-            { text: "Cancel", style: "cancel" },
-            { text: "Delete", style: "destructive", onPress: () => Alert.alert("Requested", "Account deletion request submitted.") }
-          ], { cancelable: true }),
+          () => setShowDeleteModal(true),
           <Ionicons name="chevron-forward" size={20} color={colors.text + '40'} />
         )}
         <View style={[styles.divider, { backgroundColor: colors.border, marginVertical: 8 }]} />
@@ -215,6 +221,12 @@ export default function ProfileScreen() {
         visible={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
         onConfirm={handleLogout}
+      />
+
+      <DeleteAccountModal
+        visible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteAccount}
       />
     </ScrollView>
   );

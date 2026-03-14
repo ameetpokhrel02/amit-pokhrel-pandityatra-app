@@ -3,11 +3,12 @@ import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Keyboard
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { Colors } from '@/constants/Colors';
-import { fetchChatRoomMessages, sendMessage, getAISuggestion } from '@/services/chat.service';
+import { fetchChatRoomMessages, sendMessage, getAISuggestion, fetchChatRooms } from '@/services/chat.service';
 import { ChatMessage, ChatRoom } from '@/types/chat';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useTheme } from '@/store/ThemeContext';
 import { useUser } from '@/store/UserContext';
+import { getImageUrl } from '@/utils/image';
 
 export default function ChatRoomScreen() {
   const { id } = useLocalSearchParams();
@@ -18,6 +19,7 @@ export default function ChatRoomScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(true);
+  const [room, setRoom] = useState<ChatRoom | null>(null);
   const [aiSuggestion, setAiSuggestion] = useState<ChatMessage | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
@@ -28,13 +30,21 @@ export default function ChatRoomScreen() {
   const loadMessages = async () => {
     if (typeof id !== 'string') return;
     try {
+      // Fetch messages
       const data = await fetchChatRoomMessages(id);
       setMessages(data);
+
+      // Fetch room details to get the Pandit name
+      const rooms = await fetchChatRooms();
+      const currentRoom = rooms.find(r => String(r.id) === String(id));
+      if (currentRoom) {
+        setRoom(currentRoom);
+      }
 
       // Check for AI suggestion based on last message
       if (data.length > 0) {
         const lastMsg = data[data.length - 1];
-        if (lastMsg.senderId !== user?.email && lastMsg.senderId !== 'u1') { // Flexible 'me' check
+        if (lastMsg.senderId !== user?.email && lastMsg.senderId !== 'u1') {
           const suggestion = await getAISuggestion(id, lastMsg.text);
           setAiSuggestion(suggestion);
         }
@@ -118,7 +128,9 @@ export default function ChatRoomScreen() {
           <IconSymbol name="chevron.left" size={28} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Pandit Ram Acharya</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>
+            {room?.participants.find(p => p.role === 'pandit')?.name || 'Chat with Pandit'}
+          </Text>
           <View style={styles.verifiedBadge}>
             <IconSymbol name="checkmark.circle.fill" size={14} color={colors.primary} />
             <Text style={[styles.verifiedText, { color: colors.primary }]}>Verified Pandit</Text>

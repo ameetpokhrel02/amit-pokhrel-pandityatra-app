@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Dimensions, ActivityIndicator, Animated } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
-import { useCart } from '@/store/CartContext';
+import { useCartStore } from '@/store/cart.store';
 import { useAuthStore } from '@/store/auth.store';
 import { useTheme } from '@/store/ThemeContext';
 import { DailyPanchang } from '@/components/home/DailyPanchang';
@@ -13,8 +13,33 @@ import { fetchServices } from '@/services/puja.service';
 import { fetchPandits } from '@/services/pandit.service';
 import { fetchMyBookings } from '@/services/booking.service';
 import { fetchBookingSamagriRecommendations } from '@/services/recommender.service';
-import { Service, Pandit, Booking, SamagriItem } from '@/services/api';
+import { fetchSamagriItems, fetchSamagriCategories } from '@/services/shop.service';
+import { useNotificationStore } from '@/store/notification.store';
+import { Service, Pandit, Booking, SamagriItem, SamagriCategory } from '@/services/api';
 import { getImageUrl } from '@/utils/image';
+
+const { width } = Dimensions.get('window');
+
+const BANNERS = [
+  { 
+    id: 1, 
+    image: require('@/assets/images/hero 2.png'), 
+    title: 'Divine Shanti', 
+    subtitle: 'Spiritual Essentials & Holistic Goods' 
+  },
+  { 
+    id: 2, 
+    image: require('@/assets/images/oils products.png'), 
+    title: 'Authentic Oils', 
+    subtitle: 'Pure & Energized Spiritual Oils' 
+  },
+  { 
+    id: 3, 
+    image: require('@/assets/images/hero section 3.png'), 
+    title: 'Sacred Rituals', 
+    subtitle: 'Complete Samagri for Every Occasion' 
+  }
+];
 
 export default function CustomerHomeScreen() {
   const router = useRouter();
@@ -27,10 +52,35 @@ export default function CustomerHomeScreen() {
   const [pandits, setPandits] = useState<Pandit[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [recommendations, setRecommendations] = useState<SamagriItem[]>([]);
+  const [samagriItems, setSamagriItems] = useState<SamagriItem[]>([]);
+  const [samagriCategories, setSamagriCategories] = useState<SamagriCategory[]>([]);
+  const { unreadCount, fetchNotifications: fetchStoreNotifications } = useNotificationStore();
   const [loading, setLoading] = useState(true);
+  const { totalItems } = useCartStore();
+
+  // Banner Carousel animation
+  const scrollX = React.useRef(new Animated.Value(0)).current;
+  const flatListRef = React.useRef<any>(null);
+  const currentIndexRef = React.useRef(0);
 
   useEffect(() => {
     loadHomeData();
+
+    // Auto-slide logic (4 seconds)
+    const interval = setInterval(() => {
+      if (currentIndexRef.current < BANNERS.length - 1) {
+        currentIndexRef.current += 1;
+      } else {
+        currentIndexRef.current = 0;
+      }
+
+      flatListRef.current?.scrollToIndex({
+        index: currentIndexRef.current,
+        animated: true,
+      });
+    }, 4000);
+
+    return () => clearInterval(interval);
   }, [isAuthenticated]);
 
   const loadHomeData = async () => {
@@ -38,16 +88,23 @@ export default function CustomerHomeScreen() {
       setLoading(true);
       
       // 1. Fetch Guest-accessible data
-      const [servicesData, panditsData] = await Promise.all([
+      const [servicesData, panditsData, samagriItemsData, samagriCategoriesData] = await Promise.all([
         fetchServices(),
         fetchPandits(),
+        fetchSamagriItems(),
+        fetchSamagriCategories(),
       ]);
       setServices(servicesData.slice(0, 6));
       setPandits(panditsData.slice(0, 6));
+      setSamagriItems(samagriItemsData);
+      setSamagriCategories(samagriCategoriesData);
 
       // 2. Fetch authenticated data only if logged in and user object exists
-      if (isAuthenticated && user?.id) {
+      if (isAuthenticated && user) {
         try {
+          // Fetch notifications for unread count via store
+          fetchStoreNotifications();
+
           const bookingsData = await fetchMyBookings({ status: 'PENDING' });
           setBookings(bookingsData);
 
@@ -77,13 +134,53 @@ export default function CustomerHomeScreen() {
 
   const upcomingBooking = bookings.length > 0 ? bookings[0] : null;
 
+  const getTimeBasedGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning!";
+    if (hour < 17) return "Good afternoon!";
+    return "Good evening!";
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: '#F5F5F5' }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: '#FF6F00' }]}>
-        <View>
-          <Text style={[styles.greeting, { color: '#FFF' }]}>Namaste, {user?.name || 'Amit'} 🙏</Text>
-          <Text style={[styles.subGreeting, { color: 'rgba(255,255,255,0.8)' }]}>Book authentic Vedic pujas</Text>
+      {/* Premium Header */}
+      <View style={[styles.headerContainer, { backgroundColor: '#FFF' }]}>
+        <View style={styles.headerLeft}>
+          <View style={styles.avatarBorder}>
+            <Image 
+              source={{ uri: getImageUrl(user?.profile_pic_url) || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }}
+              style={styles.headerAvatar}
+              contentFit="cover"
+            />
+          </View>
+          <View style={styles.headerText}>
+            <Text style={styles.headerHello}>Hello, {user?.name?.split(' ')[0] || 'Amit'}</Text>
+            <Text style={styles.headerGreeting}>{getTimeBasedGreeting()}</Text>
+          </View>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={styles.headerIconBtn}
+            onPress={() => router.push('/(customer)/notifications' as any)}
+          >
+            <Ionicons name="notifications-outline" size={24} color="#333" />
+            {unreadCount > 0 && (
+              <View style={[styles.notifBadge, { backgroundColor: '#FF6F00' }]}>
+                <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.headerIconBtn}
+            onPress={() => router.push('/(customer)/cart')}
+          >
+            <Ionicons name="bag-handle-outline" size={24} color="#333" />
+            {totalItems > 0 && (
+              <View style={[styles.cartBadgeHeader, { backgroundColor: '#FF6F00' }]}>
+                <Text style={styles.cartBadgeTextHeader}>{totalItems}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -91,23 +188,63 @@ export default function CustomerHomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Banner */}
-        <View style={styles.heroBanner}>
-          <View style={styles.heroTextContent}>
-            <Text style={styles.heroTitle}>Welcome to PanditYatra</Text>
-            <Text style={styles.heroSubtitle}>Book trusted pandits{"\n"}for your pujas anytime</Text>
-            <TouchableOpacity 
-              style={styles.heroButton}
-              onPress={() => router.push('/(customer)/services')}
-            >
-              <Text style={styles.heroButtonText}>Book Puja</Text>
-            </TouchableOpacity>
-          </View>
-          <Image
-            source={require('@/assets/images/hero_3_photoroom.png')}
-            style={styles.heroImage}
-            contentFit="contain"
+        {/* Hero Banner Slider */}
+        <View style={styles.carouselContainer}>
+          <Animated.FlatList
+            ref={flatListRef}
+            data={BANNERS}
+            renderItem={({ item }) => (
+              <View style={styles.bannerItem}>
+                <Image 
+                  source={item.image} 
+                  style={styles.bannerImage}
+                  contentFit="cover"
+                />
+                <View style={styles.bannerOverlay}>
+                  <Text style={styles.bannerTitle}>{item.title}</Text>
+                  <Text style={styles.bannerSubtitle}>{item.subtitle}</Text>
+                  <TouchableOpacity 
+                    style={styles.bannerButton}
+                    onPress={() => router.push('/(customer)/services')}
+                  >
+                    <Text style={styles.bannerButtonText}>Explore Now</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+            keyExtractor={item => item.id.toString()}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+              { useNativeDriver: false }
+            )}
+            onMomentumScrollEnd={(event) => {
+              currentIndexRef.current = Math.floor(event.nativeEvent.contentOffset.x / width);
+            }}
           />
+          <View style={styles.pagination}>
+            {BANNERS.map((_, i) => {
+              const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
+              const dotWidth = scrollX.interpolate({
+                inputRange,
+                outputRange: [8, 16, 8],
+                extrapolate: 'clamp'
+              });
+              const opacity = scrollX.interpolate({
+                inputRange,
+                outputRange: [0.3, 1, 0.3],
+                extrapolate: 'clamp'
+              });
+              return (
+                <Animated.View 
+                  key={i} 
+                  style={[styles.dot, { width: dotWidth, opacity, backgroundColor: '#FF6F00' }]} 
+                />
+              );
+            })}
+          </View>
         </View>
 
         {/* Quick Actions Grid */}
@@ -242,6 +379,28 @@ export default function CustomerHomeScreen() {
           </View>
         )}
 
+        {/* Featured Samagri by Category */}
+        {samagriCategories.slice(0, 3).map(category => {
+          const categoryItems = samagriItems.filter(item => item.category === category.id).slice(0, 5);
+          if (categoryItems.length === 0) return null;
+
+          return (
+            <View key={category.id} style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Featured {category.name}</Text>
+                <TouchableOpacity onPress={() => router.push('/(customer)/shop' as any)}>
+                  <Text style={[styles.seeAll, { color: '#FF6F00' }]}>See All</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalList}>
+                {categoryItems.map((item, index) => (
+                  <SamagriCard key={item.id} item={item} index={index} colors={colors} isDark={isDark} router={router} />
+                ))}
+              </ScrollView>
+            </View>
+          );
+        })}
+
         {/* Spiritual Quote */}
         <View style={[styles.sectionContainer, styles.quoteSection]}>
           <View
@@ -316,6 +475,45 @@ function PanditCard({ pandit, index, colors, isDark, router }: any) {
   );
 }
 
+function SamagriCard({ item, index, colors, isDark, router }: any) {
+  const { addToCart } = useCartStore();
+  return (
+    <View style={styles.samagriCardWrapper}>
+      <TouchableOpacity
+        style={[styles.samagriCardHifi, { backgroundColor: isDark ? '#1F2937' : '#FFF', borderColor: isDark ? '#374151' : 'rgba(255, 111, 0, 0.08)' }]}
+        onPress={() => router.push(`/(customer)/shop/${item.id}`)}
+        activeOpacity={0.9}
+      >
+        <View style={styles.samagriImageWrapper}>
+          {item.image ? (
+            <Image
+              source={{ uri: item.image }}
+              style={styles.samagriImageHifi}
+              contentFit="cover"
+            />
+          ) : (
+            <View style={[styles.samagriImageHifi, { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }]}>
+              <Ionicons name="image-outline" size={30} color={colors.text + '20'} />
+            </View>
+          )}
+        </View>
+        <View style={styles.samagriInfoHifi}>
+          <Text style={[styles.samagriNameHifi, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
+          <View style={styles.samagriActionRow}>
+            <Text style={styles.samagriPriceHifi}>NPR {item.price}</Text>
+            <TouchableOpacity 
+              style={styles.samagriAddBtn}
+              onPress={() => addToCart({ ...item, id: String(item.id) } as any)}
+            >
+              <Ionicons name="add" size={16} color="#FFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 function QuickActionItem({ title, icon, color, onPress }: any) {
   return (
     <TouchableOpacity
@@ -337,6 +535,98 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 100,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatarBorder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    padding: 2,
+    backgroundColor: '#FF00A8', // Magenta from reference
+  },
+  headerAvatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  headerText: {
+    justifyContent: 'center',
+  },
+  headerHello: {
+    fontSize: 14,
+    color: '#888',
+    marginBottom: 2,
+  },
+  headerGreeting: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#000',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  headerIconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#F7F7F7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  notifBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  notifBadgeText: {
+    color: '#FFF',
+    fontSize: 8,
+    fontWeight: 'bold',
+  },
+  cartBadgeHeader: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  cartBadgeTextHeader: {
+    color: '#FFF',
+    fontSize: 8,
+    fontWeight: 'bold',
   },
   header: {
     flexDirection: 'row',
@@ -373,6 +663,45 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 2,
   },
+  carouselContainer: {
+    width: width,
+    height: 220,
+    marginBottom: 24,
+  },
+  bannerItem: {
+    width: width,
+    paddingHorizontal: 16,
+    height: 200,
+    justifyContent: 'center',
+  },
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
+  },
+  bannerOverlay: {
+    position: 'absolute',
+    left: 40,
+    top: 30,
+    right: 40,
+  },
+  bannerTitle: { color: '#FFF', fontSize: 24, fontWeight: 'bold', marginBottom: 4 },
+  bannerSubtitle: { color: '#FFF', fontSize: 14, opacity: 0.9, marginBottom: 16 },
+  bannerButton: {
+    backgroundColor: '#FFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  bannerButtonText: { color: '#FF6F00', fontWeight: 'bold', fontSize: 12 },
+  pagination: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: -20,
+    gap: 6,
+  },
+  dot: { height: 8, borderRadius: 4 },
   heroBanner: {
     height: 220,
     backgroundColor: '#FFFFFF',
@@ -677,6 +1006,59 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     color: '#FF6F00',
+  },
+  samagriCardWrapper: {
+    paddingBottom: 10,
+  },
+  samagriCardHifi: {
+    width: 150,
+    borderRadius: 20,
+    marginRight: 16,
+    padding: 10,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  samagriImageWrapper: {
+    width: '100%',
+    height: 110,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#F5F5F5',
+    marginBottom: 8,
+  },
+  samagriImageHifi: {
+    width: '100%',
+    height: '100%',
+  },
+  samagriInfoHifi: {
+    paddingHorizontal: 2,
+  },
+  samagriNameHifi: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  samagriActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  samagriPriceHifi: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FF6F00',
+  },
+  samagriAddBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 10,
+    backgroundColor: '#FF6F00',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   quoteSection: {
     alignItems: 'center',

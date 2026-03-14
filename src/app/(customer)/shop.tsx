@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image,
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
-import { useCart } from '@/store/CartContext';
+import { useCartStore } from '@/store/cart.store';
 import { fetchSamagriItems, fetchSamagriCategories } from '@/services/shop.service';
 import { SamagriItem } from '@/services/api';
 import { useTheme } from '@/store/ThemeContext';
@@ -11,17 +11,31 @@ import { fetchProfile } from '@/services/auth.service';
 
 const { width } = Dimensions.get('window');
 
-// Mock banner data (using generated asset paths - assuming they are in the artifacts dir for now, 
-// in a real app these would be remote URLs or local assets)
 const BANNERS = [
-  { id: 1, image: 'spiritual_shop_banner_1_1773423494212.png', title: 'Divine Shanti', subtitle: 'Spiritual Essentials & Holistic Goods' },
-  { id: 2, image: 'spiritual_shop_banner_2_1773423787389.png', title: 'Authentic Samagri', subtitle: 'Curated Essentials for your Journeys' }
+  { 
+    id: 1, 
+    image: require('@/assets/images/hero 2.png'), 
+    title: 'Divine Shanti', 
+    subtitle: 'Spiritual Essentials & Holistic Goods' 
+  },
+  { 
+    id: 2, 
+    image: require('@/assets/images/oils products.png'), 
+    title: 'Authentic Oils', 
+    subtitle: 'Pure & Energized Spiritual Oils' 
+  },
+  { 
+    id: 3, 
+    image: require('@/assets/images/hero section 3.png'), 
+    title: 'Sacred Rituals', 
+    subtitle: 'Complete Samagri for Every Occasion' 
+  }
 ];
 
 export default function ShopScreen() {
   const router = useRouter();
   const { colors, theme } = useTheme();
-  const { addToCart, totalItems, totalPrice } = useCart();
+  const { addToCart, totalItems, totalPrice } = useCartStore();
   const isDark = theme === 'dark';
 
   const [products, setProducts] = useState<SamagriItem[]>([]);
@@ -34,10 +48,28 @@ export default function ShopScreen() {
 
   // Banner Carousel animation
   const scrollX = useRef(new Animated.Value(0)).current;
+  const flatListRef = useRef<FlatList>(null);
+  const currentIndexRef = useRef(0);
 
   useEffect(() => {
     loadData();
     getUserInfo();
+
+    // Auto-slide interval (4 seconds)
+    const interval = setInterval(() => {
+      if (currentIndexRef.current < BANNERS.length - 1) {
+        currentIndexRef.current += 1;
+      } else {
+        currentIndexRef.current = 0;
+      }
+      
+      flatListRef.current?.scrollToIndex({
+        index: currentIndexRef.current,
+        animated: true,
+      });
+    }, 4000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
@@ -89,9 +121,8 @@ export default function ShopScreen() {
 
   const renderBanner = ({ item }: { item: typeof BANNERS[0] }) => (
     <View style={styles.bannerItem}>
-      {/* Note: In absolute paths since they are in artifacts dir */}
       <Image 
-        source={{ uri: `/home/amit/.gemini/antigravity/brain/88c16a10-fb80-486e-a2e2-549c710d8fcc/${item.image}` }} 
+        source={item.image} 
         style={styles.bannerImage}
         resizeMode="cover"
       />
@@ -178,6 +209,7 @@ export default function ShopScreen() {
         {/* Banner Carousel */}
         <View style={styles.carouselContainer}>
           <FlatList
+            ref={flatListRef}
             data={BANNERS}
             renderItem={renderBanner}
             keyExtractor={item => item.id.toString()}
@@ -188,6 +220,9 @@ export default function ShopScreen() {
               [{ nativeEvent: { contentOffset: { x: scrollX } } }],
               { useNativeDriver: false }
             )}
+            onMomentumScrollEnd={(event) => {
+              currentIndexRef.current = Math.floor(event.nativeEvent.contentOffset.x / width);
+            }}
           />
           <View style={styles.pagination}>
             {BANNERS.map((_, i) => {

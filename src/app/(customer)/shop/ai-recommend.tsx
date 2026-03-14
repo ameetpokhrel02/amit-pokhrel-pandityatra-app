@@ -9,12 +9,12 @@ import { aiRecommendSamagri } from '@/services/shop.service';
 import { fetchSamagriItems } from '@/services/shop.service';
 import { SamagriItem } from '@/services/api';
 import { Button } from '@/components/ui/Button';
-import { useCart } from '@/store/CartContext';
+import { useCartStore } from '@/store/cart.store';
 
 export default function AIRecommendScreen() {
     const router = useRouter();
     const { colors, theme } = useTheme();
-    const { addToCart } = useCart();
+    const { addToCart } = useCartStore();
     const isDark = theme === 'dark';
 
     const [pujaName, setPujaName] = useState('');

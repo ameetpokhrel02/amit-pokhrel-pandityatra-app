@@ -124,7 +124,7 @@ function LayoutContent() {
         'bookings/samagri-recommendations', 'cart', 'shop/[id]', 
         'kundali', 'edit-profile', 'checkout', 'panchang', 
         'services/index', 'chat/[id]', 'pandit/[id]', 'payments', 
-        'payments/checkout', 'video/[bookingId]', 'services/list', 
+        'video/[bookingId]', 'services/list', 
         'services/[id]', 'shop/ai-recommend', 'reviews/pending', 
         'reviews/history', 'reviews/platform-feedback', 'bookings/review',
         'notifications', 'kundali-history', 'shop/orders', 'shop/order/[id]',

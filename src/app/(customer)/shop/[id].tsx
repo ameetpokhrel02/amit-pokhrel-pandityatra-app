@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIn
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
-import { useCart } from '@/store/CartContext';
+import { useCartStore } from '@/store/cart.store';
 import { fetchSamagriItems } from '@/services/shop.service';
 import { SamagriItem } from '@/services/api';
 import { useTheme } from '@/store/ThemeContext';
@@ -13,7 +13,7 @@ const { width } = Dimensions.get('window');
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { addToCart, updateQuantity, getItemCount } = useCart();
+  const { addToCart, updateQuantity, getItemCount } = useCartStore();
   const { colors, theme } = useTheme();
   const isDark = theme === 'dark';
 

@@ -10,15 +10,7 @@ import { initiatePayment, verifyKhaltiPayment } from '@/services/payment.service
 import { Button } from '@/components/ui/Button';
 import { PaymentWebView } from '@/components/common/PaymentWebView';
 
-// Safely import native module
-const KhaltiPaymentSdk = (() => {
-    try {
-        return require('@bishaldahal/react-native-khalti-checkout').default;
-    } catch (e) {
-        console.warn('Khalti SDK native module not found');
-        return null;
-    }
-})();
+
 
 export default function CheckoutScreen() {
     const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
@@ -58,70 +50,18 @@ export default function CheckoutScreen() {
         try {
             setPaying(true);
 
-            if (selectedMethod === 'khalti') {
-                // 1. Initiate payment on backend
-                const paymentIntent = await initiatePayment({
-                    booking: booking.id,
-                    payment_method: 'khalti',
-                    amount: booking.total_fee,
-                });
+            // Universal payment initiation via backend redirect
+            const paymentIntent = await initiatePayment({
+                booking: booking.id,
+                payment_method: selectedMethod,
+                amount: booking.total_fee,
+            });
 
-                if (paymentIntent.payment_url) {
-                    setPaymentUrl(paymentIntent.payment_url);
-                    setShowWebView(true);
-                    return;
-                }
-
-                // 2. Open Khalti SDK
-                if (!KhaltiPaymentSdk) {
-                    Alert.alert(
-                        'Native Module Missing',
-                        'Khalti Payment SDK requires a development build. It is not available in Expo Go. Please use a development build to test payments.',
-                        [{ text: 'OK' }]
-                    );
-                    setPaying(false);
-                    return;
-                }
-
-                KhaltiPaymentSdk.startPayment({
-                    publicKey: "test_public_key_77c4a6311a2f4705ba362035985b88f3",
-                    pidx: (paymentIntent.pidx || paymentIntent.payment_url?.split('pidx=')[1]) || "", // Fallback to empty string for TS, though check below handles it
-                    environment: "TEST",
-                }).then((payload: any) => {
-                    // Handle success from promise if needed, but the SDK also has event listeners
-                    // Based on .d.ts, startPayment returns Promise<PaymentSuccessPayload>
-                    handleKhaltiSuccess(payload);
-                }).catch((error: any) => {
-                    console.error('Khalti Error:', error);
-                    Alert.alert('Payment Failed', 'Something went wrong with Khalti.');
-                });
-
-                // Alternatively, use event listeners if the promise doesn't fire as expected in some versions
-                KhaltiPaymentSdk.onPaymentSuccess((payload: any) => {
-                    handleKhaltiSuccess(payload);
-                });
-
-                KhaltiPaymentSdk.onPaymentError((payload: any) => {
-                    console.error('Khalti Error:', payload);
-                    Alert.alert('Payment Failed', payload.error || 'Something went wrong.');
-                });
-            } else if (selectedMethod === 'esewa') {
-                // Initiate eSewa payment
-                const paymentIntent = await initiatePayment({
-                    booking: booking.id,
-                    payment_method: 'esewa',
-                    amount: booking.total_fee,
-                });
-
-                if (paymentIntent.payment_url) {
-                    setPaymentUrl(paymentIntent.payment_url);
-                    setShowWebView(true);
-                } else {
-                    Alert.alert('Error', 'Failed to get eSewa payment URL.');
-                }
+            if (paymentIntent.payment_url) {
+                setPaymentUrl(paymentIntent.payment_url);
+                setShowWebView(true);
             } else {
-                // Handle Stripe or other methods
-                Alert.alert('Coming Soon', 'Stripe payment is not yet integrated in this demo.');
+                Alert.alert('Error', `Failed to get ${selectedMethod} payment URL.`);
             }
         } catch (error: any) {
             console.error('Payment initiation failed:', error);
@@ -131,14 +71,16 @@ export default function CheckoutScreen() {
         }
     };
 
-    const handleKhaltiSuccess = async (payload: any) => {
+    const handlePaymentSuccess = async (pidx?: string) => {
         try {
-            // 3. Verify on backend
-            // In the new API, we verify using pidx
-            await verifyKhaltiPayment({
-                token: payload.pidx, // The SDK returns pidx in the payload
-                amount: booking?.total_fee || 0
-            });
+            // Verification logic remains backend-driven
+            if (pidx) {
+                await verifyKhaltiPayment({
+                    token: pidx,
+                    amount: booking?.total_fee || 0
+                });
+            }
+            
             Alert.alert('Success', 'Payment successful!', [
                 { text: 'OK', onPress: () => router.replace('/(customer)/bookings') }
             ]);
@@ -177,9 +119,8 @@ export default function CheckoutScreen() {
                     url={paymentUrl}
                     onSuccess={(data) => {
                         setShowWebView(false);
-                        // Redirect URLs usually contain pidx for Khalti
                         const pidx = data.url.split('pidx=')[1]?.split('&')[0];
-                        handleKhaltiSuccess({ pidx });
+                        handlePaymentSuccess(pidx);
                     }}
                     onFailure={() => {
                         setShowWebView(false);

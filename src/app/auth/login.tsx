@@ -233,7 +233,7 @@ export default function LoginScreen() {
                 variant="primary"
                 onPress={() => setLoginView('phone')}
                 style={styles.mainButton}
-                leftIcon={<Ionicons name="call" size={20} color="#FFF" />}
+                leftIcon={<Ionicons name="call-outline" size={20} color="#FFF" />}
               />
 
               <Button
@@ -241,7 +241,7 @@ export default function LoginScreen() {
                 variant="outline"
                 onPress={() => setLoginView('email')}
                 style={styles.emailButton}
-                leftIcon={<Ionicons name="mail" size={20} color="#FF6F00" />}
+                leftIcon={<Ionicons name="mail-outline" size={20} color="#FF6F00" />}
               />
 
               <View style={styles.orRow}>
@@ -255,6 +255,7 @@ export default function LoginScreen() {
                 variant="outline"
                 onPress={handleGoogleLoginPress}
                 style={styles.googleButton}
+                textStyle={{ color: '#FF6F00' }}
                 leftIcon={<Ionicons name="logo-google" size={18} color="#4285F4" />}
               />
 
@@ -290,6 +291,7 @@ export default function LoginScreen() {
 
               <Button
                 title={loading ? "Sending..." : "Send OTP"}
+                variant="primary"
                 onPress={handleLogin}
                 isLoading={loading}
                 disabled={loading || phone.length < 10}
@@ -347,6 +349,7 @@ export default function LoginScreen() {
 
               <Button
                 title={loading ? "Logging in..." : "Login"}
+                variant="primary"
                 onPress={handleLogin}
                 isLoading={loading}
                 disabled={loading || !email || !password}

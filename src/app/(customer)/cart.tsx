@@ -3,14 +3,14 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
-import { useCart } from '@/store/CartContext';
+import { useCartStore } from '@/store/cart.store';
 import { useTheme } from '@/store/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 export default function CartScreen() {
   const router = useRouter();
-  const { items, updateQuantity, addToCart, removeFromCart, totalPrice } = useCart();
+  const { items, updateQuantity, addToCart, removeFromCart, totalPrice } = useCartStore();
   const { colors, theme } = useTheme();
   const isDark = theme === 'dark';
 

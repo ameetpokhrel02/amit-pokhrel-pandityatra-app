@@ -147,12 +147,23 @@ export default function EditProfileScreen() {
                         <Text style={styles.infoText}>Email address cannot be changed from the app. Please contact support if you need to update it.</Text>
                     </View>
 
-                    <Button
-                        title={loading ? "Saving..." : "Save Changes"}
-                        onPress={handleSave}
-                        disabled={loading}
-                        style={styles.saveButton}
-                    />
+                    <View style={styles.buttonRow}>
+                        <Button
+                            title="Cancel"
+                            onPress={() => router.back()}
+                            variant="outline"
+                            style={styles.cancelButton}
+                            disabled={loading}
+                        />
+                        <Button
+                            title={loading ? "Saving..." : "Save Changes"}
+                            onPress={handleSave}
+                            variant="primary"
+                            disabled={loading}
+                            style={styles.saveButton}
+                        />
+                    </View>
+                    <View style={{ height: 100 }} />
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>
@@ -166,6 +177,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         padding: 20,
         paddingTop: 60,
+        paddingBottom: 40,
     },
     header: {
         flexDirection: 'row',
@@ -238,7 +250,16 @@ const styles = StyleSheet.create({
         lineHeight: 18,
     },
     saveButton: {
-        marginTop: 10,
+        flex: 2,
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 20,
+        paddingBottom: 20,
+    },
+    cancelButton: {
+        flex: 1,
     },
     phoneInputContainer: {
         marginBottom: 8,

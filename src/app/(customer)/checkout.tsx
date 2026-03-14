@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, SafeAreaView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useCart } from '@/store/CartContext';
+import { useCartStore } from '@/store/cart.store';
 import { useTheme } from '@/store/ThemeContext';
 import { checkoutSamagri } from '@/services/shop.service';
 import { Button } from '@/components/ui/Button';
@@ -10,7 +10,7 @@ import { PaymentWebView } from '@/components/common/PaymentWebView';
 
 export default function ShopCheckoutScreen() {
   const router = useRouter();
-  const { items, totalPrice, clearCart } = useCart();
+  const { items, totalPrice, clearCart } = useCartStore();
   const { colors, theme } = useTheme();
   const isDark = theme === 'dark';
 

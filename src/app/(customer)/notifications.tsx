@@ -2,39 +2,48 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useNotificationStore } from '@/store/notification.store';
+import { Notification } from '@/services/notification.service';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  type: 'booking' | 'order' | 'system';
-}
-
-const MOCK_NOTIFICATIONS: Notification[] = [
-  { id: '1', title: 'Booking Confirmed', message: 'Your puja with Pandit G. Sharma is confirmed for tomorrow.', time: '2h ago', read: false, type: 'booking' },
-  { id: '2', title: 'Order Shipped', message: 'Your Rudraksha Mala order has been shipped.', time: '5h ago', read: true, type: 'order' },
-  { id: '3', title: 'System Update', message: 'New features added to Kundali generator.', time: '1d ago', read: true, type: 'system' },
-];
+dayjs.extend(relativeTime);
 
 export default function NotificationsScreen() {
   const router = useRouter();
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
-  const [loading, setLoading] = useState(false);
+  const { notifications, isLoading, fetchNotifications, markAsRead, markAllRead } = useNotificationStore();
 
-  const markAllRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  React.useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const handleMarkAllRead = async () => {
+    await markAllRead();
+  };
+
+  const handleNotifPress = async (item: Notification) => {
+    if (!item.is_read) {
+      await markAsRead(item.id);
+    }
+    // Handle navigation based on type if needed
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    try {
+      return dayjs(dateString).fromNow();
+    } catch (e) {
+      return 'just now';
+    }
   };
 
   const renderItem = ({ item }: { item: Notification }) => (
     <TouchableOpacity 
-      style={[styles.notificationCard, !item.read && styles.unreadCard]}
-      onPress={() => {/* Handle navigation based on type */}}
+      style={[styles.notificationCard, !item.is_read && styles.unreadCard]}
+      onPress={() => handleNotifPress(item)}
     >
       <View style={styles.iconCircle}>
         <Ionicons 
-          name={item.type === 'booking' ? 'calendar' : item.type === 'order' ? 'cart' : 'notifications'} 
+          name={item.type === 'BOOKING' ? 'calendar' : item.type === 'ORDER' ? 'cart' : 'notifications'} 
           size={20} 
           color="#f97316" 
         />
@@ -42,11 +51,11 @@ export default function NotificationsScreen() {
       <View style={styles.textContainer}>
         <View style={styles.titleRow}>
           <Text style={styles.notifTitle}>{item.title}</Text>
-          <Text style={styles.notifTime}>{item.time}</Text>
+          <Text style={styles.notifTime}>{getTimeAgo(item.created_at)}</Text>
         </View>
         <Text style={styles.notifMessage} numberOfLines={2}>{item.message}</Text>
       </View>
-      {!item.read && <View style={styles.unreadDot} />}
+      {!item.is_read && <View style={styles.unreadDot} />}
     </TouchableOpacity>
   );
 
@@ -57,16 +66,20 @@ export default function NotificationsScreen() {
           <Ionicons name="arrow-back" size={24} color="#f97316" />
         </TouchableOpacity>
         <Text style={styles.title}>Notifications</Text>
-        <TouchableOpacity onPress={markAllRead}>
+        <TouchableOpacity onPress={handleMarkAllRead}>
           <Text style={styles.markReadText}>Mark all read</Text>
         </TouchableOpacity>
       </View>
 
-      {notifications.length > 0 ? (
+      {isLoading ? (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color="#f97316" />
+        </View>
+      ) : notifications.length > 0 ? (
         <FlatList
           data={notifications}
           renderItem={renderItem}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item.id.toString()}
           contentContainerStyle={styles.listContent}
         />
       ) : (

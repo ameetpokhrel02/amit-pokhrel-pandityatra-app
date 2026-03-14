@@ -165,6 +165,16 @@ export default function BookingDetailScreen() {
 
         {/* Actions */}
         <View style={styles.actionsContainer}>
+          {booking.status === 'ACCEPTED' && (
+            <Button 
+               title="Join Live Session" 
+               onPress={() => router.push(`/(customer)/video/${booking.id}`)}
+               variant="primary"
+               leftIcon={<Ionicons name="videocam" size={20} color="white" />}
+               style={styles.actionButton}
+            />
+          )}
+
           {!booking.payment_status && booking.status !== 'CANCELLED' && (
             <Button 
                title="Pay Now" 
