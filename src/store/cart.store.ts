@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Product } from '@/data/products';
 
 interface CartItem extends Product {
@@ -18,7 +20,9 @@ interface CartState {
   getItemCount: (productId: string) => number;
 }
 
-export const useCartStore = create<CartState>((set, get) => ({
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
   items: [],
   totalItems: 0,
   totalPrice: 0,
@@ -77,4 +81,10 @@ export const useCartStore = create<CartState>((set, get) => ({
   getItemCount: (productId) => {
     return get().items.find(item => item.id === productId)?.quantity || 0;
   },
-}));
+}),
+{
+  name: 'cart-storage',
+  storage: createJSONStorage(() => AsyncStorage),
+}
+)
+);

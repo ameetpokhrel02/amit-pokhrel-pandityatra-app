@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
+import { fetchProfile } from '@/services/auth.service';
 
 interface User {
   id: string;
@@ -24,6 +25,7 @@ interface AuthState {
   login: (userData: User, tokens: { access: string; refresh: string }) => Promise<void>;
   logout: () => Promise<void>;
   initialize: () => Promise<void>;
+  syncProfile: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -87,12 +89,36 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           role: (roleStr as any) || 'customer',
           isLoading: false 
         });
+        // Sync profile in background after immediate UI update
+        get().syncProfile();
       } else {
         set({ isLoading: false, role: 'guest' });
       }
     } catch (error) {
       console.error('Error during auth initialization:', error);
       set({ isLoading: false, role: 'guest' });
+    }
+  },
+  syncProfile: async () => {
+    try {
+      const userData = await fetchProfile();
+      if (userData) {
+        // Map backend profile response to store User type
+        const mappedUser: User = {
+          id: userData.id.toString(),
+          name: userData.full_name,
+          phone: userData.phone_number,
+          email: userData.email,
+          role: userData.role || 'customer',
+          profile_pic_url: userData.profile_pic_url,
+        };
+        
+        await SecureStore.setItemAsync('user', JSON.stringify(mappedUser));
+        await SecureStore.setItemAsync('role', mappedUser.role);
+        set({ user: mappedUser, role: mappedUser.role });
+      }
+    } catch (error) {
+      console.error('Error during profile sync:', error);
     }
   },
 }));

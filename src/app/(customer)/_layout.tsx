@@ -17,7 +17,7 @@ function ShopIcon({ color, focused }: { color: string, focused: boolean }) {
             position: 'absolute',
             right: -8,
             top: -4,
-            backgroundColor: '#111', // Dark badge as in reference
+            backgroundColor: '#FF6F00', // Match notification orange
             borderRadius: 10,
             minWidth: 16,
             height: 16,
@@ -28,7 +28,7 @@ function ShopIcon({ color, focused }: { color: string, focused: boolean }) {
             borderColor: Colors.light.background,
           }}
         >
-          <Text style={{ color: '#FF6F00', fontSize: 9, fontWeight: 'bold' }}>{totalItems}</Text>
+          <Text style={{ color: '#FFF', fontSize: 9, fontWeight: 'bold' }}>{totalItems}</Text>
         </View>
       )}
     </View>
@@ -38,15 +38,15 @@ function ShopIcon({ color, focused }: { color: string, focused: boolean }) {
 function AIChatIcon({ color, focused }: { color: string, focused: boolean }) {
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Ionicons 
-        name={focused ? 'chatbox' : 'chatbox-outline'} 
-        size={26} 
-        color={color} 
+      <Ionicons
+        name={focused ? 'chatbox' : 'chatbox-outline'}
+        size={26}
+        color={color}
       />
       <View style={{ position: 'absolute', top: 6 }}>
-        <Text style={{ 
-          fontSize: 8, 
-          fontWeight: 'bold', 
+        <Text style={{
+          fontSize: 8,
+          fontWeight: 'bold',
           color: color,
           textTransform: 'uppercase'
         }}>AI</Text>
@@ -87,7 +87,7 @@ function LayoutContent() {
         options={{
           title: 'Pandits',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'reorder-two' : 'reorder-two-outline'} size={32} color={color} />
+            <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} size={26} color={color} />
           ),
         }}
       />
@@ -120,12 +120,12 @@ function LayoutContent() {
       />
       {/* Hidden Screens */}
       {[
-        'bookings', 'bookings/[id]', 'booking', 'chat/ai-guide', 
-        'bookings/samagri-recommendations', 'cart', 'shop/[id]', 
-        'kundali', 'edit-profile', 'checkout', 'panchang', 
-        'services/index', 'chat/[id]', 'pandit/[id]', 'payments', 
-        'video/[bookingId]', 'services/list', 
-        'services/[id]', 'shop/ai-recommend', 'reviews/pending', 
+        'bookings', 'bookings/[id]', 'booking', 'chat/ai-guide',
+        'bookings/samagri-recommendations', 'cart', 'shop/[id]',
+        'kundali', 'edit-profile', 'checkout', 'panchang',
+        'services/index', 'chat/[id]', 'pandit/[id]', 'payments',
+        'video/[bookingId]', 'services/list',
+        'services/[id]', 'shop/ai-recommend', 'reviews/pending',
         'reviews/history', 'reviews/platform-feedback', 'bookings/review',
         'notifications', 'kundali-history', 'shop/orders', 'shop/order/[id]',
         'booking-confirmation', 'invoice'

@@ -34,7 +34,9 @@ export const PanditCard: React.FC<PanditCardProps> = ({ pandit, index, onPress, 
           
           <View style={styles.infoContainer}>
             <View style={styles.headerRow}>
-              <Text style={styles.name} numberOfLines={1}>{pandit.name}</Text>
+              <Text style={styles.name} numberOfLines={1}>
+                {pandit.name || (pandit as any).user_details?.full_name}
+              </Text>
               <View style={styles.ratingBadge}>
                 <Ionicons name="star" size={12} color="#FFD700" />
                 <Text style={styles.ratingText}>{pandit.rating}</Text>
@@ -48,12 +50,16 @@ export const PanditCard: React.FC<PanditCardProps> = ({ pandit, index, onPress, 
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
                 <Ionicons name="time-outline" size={14} color="#9C1C1C" />
-                <Text style={styles.statText}>{pandit.experience} Yrs Exp.</Text>
+                <Text style={styles.statText}>
+                  {(pandit as any).experience_years || pandit.experience || 0} Yrs Exp.
+                </Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Ionicons name="chatbubble-outline" size={14} color="#9C1C1C" />
-                <Text style={styles.statText}>{pandit.reviewCount} Reviews</Text>
+                <Text style={styles.statText}>
+                  {(pandit as any).review_count || pandit.reviewCount || 0} Reviews
+                </Text>
               </View>
             </View>
 

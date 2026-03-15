@@ -21,29 +21,29 @@ import { getImageUrl } from '@/utils/image';
 const { width } = Dimensions.get('window');
 
 const BANNERS = [
-  { 
-    id: 1, 
-    image: require('@/assets/images/hero 2.png'), 
-    title: 'Divine Shanti', 
-    subtitle: 'Spiritual Essentials & Holistic Goods' 
+  {
+    id: 1,
+    image: require('@/assets/images/hero 2.png'),
+    title: 'Divine Shanti',
+    subtitle: 'Spiritual Essentials & Holistic Goods'
   },
-  { 
-    id: 2, 
-    image: require('@/assets/images/oils products.png'), 
-    title: 'Authentic Oils', 
-    subtitle: 'Pure & Energized Spiritual Oils' 
+  {
+    id: 2,
+    image: require('@/assets/images/oils products.png'),
+    title: 'Authentic Oils',
+    subtitle: 'Pure & Energized Spiritual Oils'
   },
-  { 
-    id: 3, 
-    image: require('@/assets/images/hero section 3.png'), 
-    title: 'Sacred Rituals', 
-    subtitle: 'Complete Samagri for Every Occasion' 
+  {
+    id: 3,
+    image: require('@/assets/images/hero section 3.png'),
+    title: 'Sacred Rituals',
+    subtitle: 'Complete Samagri for Every Occasion'
   }
 ];
 
 export default function CustomerHomeScreen() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, syncProfile } = useAuthStore();
   const { colors, theme } = useTheme();
   const { t } = useTranslation();
   const isDark = theme === 'dark';
@@ -86,7 +86,7 @@ export default function CustomerHomeScreen() {
   const loadHomeData = async () => {
     try {
       setLoading(true);
-      
+
       // 1. Fetch Guest-accessible data
       const [servicesData, panditsData, samagriItemsData, samagriCategoriesData] = await Promise.all([
         fetchServices(),
@@ -102,6 +102,9 @@ export default function CustomerHomeScreen() {
       // 2. Fetch authenticated data only if logged in and user object exists
       if (isAuthenticated && user) {
         try {
+          // Sync profile to get latest name/photo/etc. from backend
+          syncProfile();
+
           // Fetch notifications for unread count via store
           fetchStoreNotifications();
 
@@ -119,9 +122,9 @@ export default function CustomerHomeScreen() {
         } catch (authErr: any) {
           // Silent failure for session-related errors when not primary
           if (authErr?.response?.status === 401) {
-             console.warn("Guest session unauthorized, skipping authenticated data");
+            console.warn("Guest session unauthorized, skipping authenticated data");
           } else {
-             console.error("Auth-only data fetch failed:", authErr);
+            console.error("Auth-only data fetch failed:", authErr);
           }
         }
       }
@@ -147,7 +150,7 @@ export default function CustomerHomeScreen() {
       <View style={[styles.headerContainer, { backgroundColor: '#FFF' }]}>
         <View style={styles.headerLeft}>
           <View style={styles.avatarBorder}>
-            <Image 
+            <Image
               source={{ uri: getImageUrl(user?.profile_pic_url) || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }}
               style={styles.headerAvatar}
               contentFit="cover"
@@ -159,7 +162,7 @@ export default function CustomerHomeScreen() {
           </View>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.headerIconBtn}
             onPress={() => router.push('/(customer)/notifications' as any)}
           >
@@ -170,7 +173,7 @@ export default function CustomerHomeScreen() {
               </View>
             )}
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.headerIconBtn}
             onPress={() => router.push('/(customer)/cart')}
           >
@@ -184,7 +187,7 @@ export default function CustomerHomeScreen() {
         </View>
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -195,15 +198,15 @@ export default function CustomerHomeScreen() {
             data={BANNERS}
             renderItem={({ item }) => (
               <View style={styles.bannerItem}>
-                <Image 
-                  source={item.image} 
+                <Image
+                  source={item.image}
                   style={styles.bannerImage}
                   contentFit="cover"
                 />
                 <View style={styles.bannerOverlay}>
                   <Text style={styles.bannerTitle}>{item.title}</Text>
                   <Text style={styles.bannerSubtitle}>{item.subtitle}</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.bannerButton}
                     onPress={() => router.push('/(customer)/services')}
                   >
@@ -238,9 +241,9 @@ export default function CustomerHomeScreen() {
                 extrapolate: 'clamp'
               });
               return (
-                <Animated.View 
-                  key={i} 
-                  style={[styles.dot, { width: dotWidth, opacity, backgroundColor: '#FF6F00' }]} 
+                <Animated.View
+                  key={i}
+                  style={[styles.dot, { width: dotWidth, opacity, backgroundColor: '#FF6F00' }]}
                 />
               );
             })}
@@ -348,7 +351,7 @@ export default function CustomerHomeScreen() {
                   <Text style={[styles.bookingDetailText, { color: '#333' }]}>{upcomingBooking.booking_time}</Text>
                 </View>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.viewBookingButton, { borderColor: '#F97316' }]}
                 onPress={() => router.push(`/(customer)/bookings/${upcomingBooking.id}` as any)}
               >
@@ -440,10 +443,10 @@ function ServiceCard({ service, index, colors, isDark, router }: any) {
 }
 
 function PanditCard({ pandit, index, colors, isDark, router }: any) {
-  const rating = pandit.rating && parseFloat(pandit.rating) > 0 ? pandit.rating : '4.5';
-  const name = pandit.user_details?.full_name || 'Pandit';
-  const image = getImageUrl(pandit.user_details?.profile_pic_url) || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-  
+  const rating = pandit.rating && parseFloat(pandit.rating) > 0 ? pandit.rating : 'New';
+  const name = pandit.user_details?.full_name || pandit.name || 'Pandit';
+  const image = getImageUrl(pandit.user_details?.profile_pic_url || pandit.image) || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+
   return (
     <TouchableOpacity
       style={styles.panditCardHifi}
@@ -463,9 +466,11 @@ function PanditCard({ pandit, index, colors, isDark, router }: any) {
       </View>
       <View style={styles.panditInfoHifi}>
         <Text style={styles.panditNameHifi} numberOfLines={1}>{name}</Text>
-        <Text style={styles.panditExpHifi}>{pandit.experience_years || '5'}+ Yrs Exp.</Text>
+        <Text style={styles.panditExpHifi}>
+          {pandit.experience_years || pandit.experience || '5'}+ Yrs Exp.
+        </Text>
         <View style={styles.panditActionRow}>
-          <Text style={styles.panditPriceHifi}>NPR {pandit.price || 500}</Text>
+          <Text style={styles.panditPriceHifi}>NPR {pandit.base_price || pandit.price || 500}</Text>
           <View style={styles.panditBookIcon}>
             <Ionicons name="arrow-forward" size={12} color="#FFF" />
           </View>
@@ -501,7 +506,7 @@ function SamagriCard({ item, index, colors, isDark, router }: any) {
           <Text style={[styles.samagriNameHifi, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
           <View style={styles.samagriActionRow}>
             <Text style={styles.samagriPriceHifi}>NPR {item.price}</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.samagriAddBtn}
               onPress={() => addToCart({ ...item, id: String(item.id) } as any)}
             >
