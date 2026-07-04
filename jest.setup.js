@@ -1,22 +1,6 @@
-// Mock axios to prevent fetch adapter issues in tests
-jest.mock('axios', () => {
-  const mockAxios = {
-    create: jest.fn(() => mockAxios),
-    get: jest.fn(() => Promise.resolve({ data: {} })),
-    post: jest.fn(() => Promise.resolve({ data: {} })),
-    put: jest.fn(() => Promise.resolve({ data: {} })),
-    patch: jest.fn(() => Promise.resolve({ data: {} })),
-    delete: jest.fn(() => Promise.resolve({ data: {} })),
-    interceptors: {
-      request: { use: jest.fn(), eject: jest.fn() },
-      response: { use: jest.fn(), eject: jest.fn() },
-    },
-    defaults: {
-      headers: { common: {} },
-    },
-  };
-  return mockAxios;
-});
+// Force axios to use node http adapter in Jest environment
+const axios = require('axios');
+axios.defaults.adapter = require('axios/lib/adapters/http');
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () =>
