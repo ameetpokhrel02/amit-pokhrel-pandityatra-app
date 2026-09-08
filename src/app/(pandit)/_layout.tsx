@@ -21,8 +21,8 @@ export default function PanditTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarLabel: 'Home',
+          title: 'Dashboard',
+          tabBarLabel: 'Dashboard',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'grid' : 'grid-outline'} size={22} color={color} />
           ),

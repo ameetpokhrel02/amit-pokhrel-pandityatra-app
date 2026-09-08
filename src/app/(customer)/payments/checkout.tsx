@@ -185,7 +185,10 @@ export default function CheckoutScreen() {
                     params: {
                         bookingId: booking.id.toString(),
                         method: selectedMethod,
-                        amount: (booking.total_fee || 0).toString()
+                        amount: (booking.total_fee || 0).toString(),
+                        serviceLocation: booking.service_location || '',
+                        panditName: booking.pandit_full_name || booking.pandit_name || '',
+                        serviceName: booking.service_name || '',
                     }
                 });
             } else {

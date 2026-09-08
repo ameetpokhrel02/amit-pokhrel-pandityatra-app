@@ -1,6 +1,7 @@
 // Force axios to use node http adapter in Jest environment
 const axios = require('axios');
-axios.defaults.adapter = require('axios/lib/adapters/http');
+axios.defaults.adapter = 'http';
+global.ReadableStream = undefined;
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () =>

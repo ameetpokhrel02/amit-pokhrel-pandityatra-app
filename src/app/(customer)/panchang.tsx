@@ -1,203 +1,218 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Modal } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import dayjs from 'dayjs';
-import { Calendar } from 'react-native-calendars';
 import { useTheme } from '@/store/ThemeContext';
 import { fetchPanchang } from '@/services/panchang.service';
 import { PanchangData } from '@/services/api';
+import {
+    BsDate,
+    NEPALI_MONTHS,
+    NEPALI_WEEKDAYS,
+    addBsMonths,
+    bsToAdIsoString,
+    buildBsMonthGrid,
+    getTodayBs,
+    toDevanagariDigits,
+} from '@/utils/nepaliCalendar';
 
 const { width } = Dimensions.get('window');
+// 16px scroll padding + 12px calendar-card padding on each side
+const CELL_SIZE = (width - 2 * (16 + 12)) / 7;
 
 export default function PanchangScreen() {
     const { colors, theme } = useTheme();
     const isDark = theme === 'dark';
     const router = useRouter();
-    const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
+
+    const todayBs = useMemo(() => getTodayBs(), []);
+    const [viewYear, setViewYear] = useState(todayBs.year);
+    const [viewMonth, setViewMonth] = useState(todayBs.month);
+    const [selected, setSelected] = useState<BsDate>(todayBs);
+
     const [data, setData] = useState<PanchangData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [showCalendarModal, setShowCalendarModal] = useState(false);
+
+    const grid = useMemo(() => buildBsMonthGrid(viewYear, viewMonth), [viewYear, viewMonth]);
 
     useEffect(() => {
-        loadPanchang(selectedDate);
-    }, [selectedDate]);
+        let mounted = true;
+        setLoading(true);
+        fetchPanchang(bsToAdIsoString(selected))
+            .then((res) => mounted && setData(res))
+            .catch(() => mounted && setData(null))
+            .finally(() => mounted && setLoading(false));
+        return () => { mounted = false; };
+    }, [selected]);
 
-    const loadPanchang = async (dateStr: string) => {
-        try {
-            setLoading(true);
-            const res = await fetchPanchang(dateStr);
-            setData(res);
-        } catch (e) {
-            // Fallback UI already handles missing values gracefully.
-        } finally {
-            setLoading(false);
+    const goToMonth = (delta: number) => {
+        const next = addBsMonths(viewYear, viewMonth, delta);
+        setViewYear(next.year);
+        setViewMonth(next.month);
+    };
+
+    const selectDay = (bs: BsDate, inCurrentMonth: boolean) => {
+        setSelected(bs);
+        if (!inCurrentMonth) {
+            setViewYear(bs.year);
+            setViewMonth(bs.month);
         }
     };
 
-    const weekDates = Array.from({ length: 7 }).map((_, i) => dayjs(selectedDate).startOf('week').add(i, 'day'));
+    const goToToday = () => {
+        setViewYear(todayBs.year);
+        setViewMonth(todayBs.month);
+        setSelected(todayBs);
+    };
 
-    if (loading) {
-        return (
-            <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
-                <ActivityIndicator size="large" color={colors.primary} />
-                <Text style={[styles.loadingText, { color: colors.text }]}>Fetching celestial data...</Text>
-            </View>
-        );
-    }
+    const isSelected = (bs: BsDate) =>
+        bs.year === selected.year && bs.month === selected.month && bs.date === selected.date;
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={[styles.header, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
+            <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
                 <Text style={[styles.headerTitle, { color: colors.text }]}>Daily Panchang</Text>
-                <TouchableOpacity onPress={() => setShowCalendarModal(true)} style={styles.calendarToggle}>
-                    <Ionicons name="calendar-outline" size={24} color={colors.primary} />
+                <TouchableOpacity onPress={goToToday} style={styles.todayIconBtn}>
+                    <Ionicons name="today-outline" size={22} color={colors.primary} />
                 </TouchableOpacity>
             </View>
 
-            {/* Quick Week Picker */}
-            <View style={[styles.weekStripWrap, { backgroundColor: colors.card, borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
-                {weekDates.map((date) => {
-                    const isSelected = date.format('YYYY-MM-DD') === selectedDate;
-                    return (
-                        <TouchableOpacity
-                            key={date.format('YYYY-MM-DD')}
-                            onPress={() => setSelectedDate(date.format('YYYY-MM-DD'))}
-                            style={[
-                                styles.weekDayItem,
-                                isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
-                            ]}
-                        >
-                            <Text style={[styles.weekDayLabel, { color: isSelected ? '#FFF' : colors.text + '80' }]}>
-                                {date.format('ddd')}
-                            </Text>
-                            <Text style={[styles.weekDayValue, { color: isSelected ? '#FFF' : colors.text }]}>
-                                {date.format('D')}
-                            </Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
-
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                {/* Date Header */}
-                <View style={[styles.dateCard, { backgroundColor: isDark ? '#1F2937' : '#FFF', borderColor: isDark ? '#374151' : '#ECECEC' }]}>
-                    <View style={[styles.nepaliDateAccent, { backgroundColor: colors.primary }]} />
-                    <Text style={styles.nepaliDate}>{data?.nepali_date || dayjs(selectedDate).format('D')}</Text>
-                    <Text style={[styles.englishDate, { color: colors.text }]}>
-                        {dayjs(selectedDate).format('dddd, MMMM D, YYYY')}
-                    </Text>
-                    <View style={[styles.tithiBadge, { backgroundColor: '#D97706' }]}> 
-                        <Text style={styles.tithiText}>{data?.tithi || '—'}</Text>
-                    </View>
-                    
-                    <View style={styles.dateNavRows}>
-                        <TouchableOpacity onPress={() => setSelectedDate(dayjs(selectedDate).subtract(1, 'day').format('YYYY-MM-DD'))}>
+                {/* Month Calendar Grid */}
+                <View style={[styles.calendarCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <View style={styles.monthNav}>
+                        <TouchableOpacity onPress={() => goToMonth(-1)} style={styles.navArrow}>
                             <Ionicons name="chevron-back" size={20} color={colors.primary} />
                         </TouchableOpacity>
-                        <TouchableOpacity 
-                            onPress={() => setSelectedDate(dayjs().format('YYYY-MM-DD'))}
-                            style={[styles.todayBtn, { borderColor: colors.primary }]}
-                        >
-                            <Text style={{ color: colors.primary, fontSize: 12, fontWeight: 'bold' }}>TODAY</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setSelectedDate(dayjs(selectedDate).add(1, 'day').format('YYYY-MM-DD'))}>
+                        <View style={styles.monthTitleWrap}>
+                            <Text style={[styles.monthTitle, { color: colors.text }]}>
+                                {NEPALI_MONTHS[viewMonth]} {toDevanagariDigits(viewYear)}
+                            </Text>
+                            <Text style={[styles.monthSubtitle, { color: colors.text + '60' }]}>
+                                {dayjs(bsToAdIsoString({ year: viewYear, month: viewMonth, date: 1 })).format('MMM')}
+                                {' / '}
+                                {dayjs(addOneBsMonthAdLabel(viewYear, viewMonth)).format('MMM YYYY')}
+                            </Text>
+                        </View>
+                        <TouchableOpacity onPress={() => goToMonth(1)} style={styles.navArrow}>
                             <Ionicons name="chevron-forward" size={20} color={colors.primary} />
                         </TouchableOpacity>
                     </View>
-                </View>
 
-                {/* Main Stats */}
-                <View style={styles.statsGrid}>
-                    <StatItem icon="sunny" label="Sunrise" value={data?.sunrise || '—'} color="#F59E0B" isDark={isDark} />
-                    <StatItem icon="moon" label="Sunset" value={data?.sunset || '—'} color="#6366F1" isDark={isDark} />
-                </View>
-
-                {/* Details Section */}
-                <View style={[styles.section, styles.detailsCard, { backgroundColor: isDark ? '#1F2937' : '#FFF', borderColor: isDark ? '#374151' : '#F3F4F6' }]}>
-                    <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 10 }]}>Celestial Details</Text>
-                    <DetailRow label="Nakshatra" value={data?.nakshatra || '—'} icon="star" isDark={isDark} />
-                    <DetailRow label="Yoga" value={data?.yoga || '—'} icon="infinite" isDark={isDark} />
-                    <DetailRow label="Karana" value={data?.karana || '—'} icon="analytics" isDark={isDark} />
-                    <DetailRow label="Rashi" value={data?.rashi || '—'} icon="moon" isDark={isDark} />
-                </View>
-
-                {/* Auspicious Times */}
-                <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Auspicious Times</Text>
-                    <View style={[styles.auspiciousCard, { backgroundColor: isDark ? '#1F2937' : '#F0FDF4' }]}>
-                        <Ionicons name="time" size={20} color="#10B981" />
-                        <View style={{ flex: 1, marginLeft: 12 }}>
-                            <Text style={[styles.auspiciousLabel, { color: isDark ? '#9CA3AF' : '#047857' }]}>Abhijit Muhurta</Text>
-                            <Text style={[styles.auspiciousValue, { color: isDark ? '#FFF' : '#065F46' }]}>
-                                {data?.auspicious_time || 'Check later for better timings'}
+                    <View style={styles.weekdayRow}>
+                        {NEPALI_WEEKDAYS.map((w, i) => (
+                            <Text
+                                key={w}
+                                style={[
+                                    styles.weekdayLabel,
+                                    { width: CELL_SIZE, color: i === 6 ? colors.primary : colors.text + '70' },
+                                ]}
+                            >
+                                {w}
                             </Text>
-                        </View>
+                        ))}
+                    </View>
+
+                    <View style={styles.grid}>
+                        {grid.map((cell) => {
+                            const selectedCell = isSelected(cell.bs);
+                            return (
+                                <TouchableOpacity
+                                    key={`${cell.bs.year}-${cell.bs.month}-${cell.bs.date}-${cell.inCurrentMonth}`}
+                                    style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}
+                                    onPress={() => selectDay(cell.bs, cell.inCurrentMonth)}
+                                >
+                                    <View style={[
+                                        styles.cellInner,
+                                        selectedCell && { backgroundColor: colors.primary },
+                                        !selectedCell && cell.isToday && { borderWidth: 1.5, borderColor: colors.primary },
+                                    ]}>
+                                        <Text style={[
+                                            styles.cellDate,
+                                            { color: cell.inCurrentMonth ? colors.text : colors.text + '35' },
+                                            selectedCell && { color: '#FFF' },
+                                            !selectedCell && cell.isToday && { color: colors.primary },
+                                        ]}>
+                                            {toDevanagariDigits(cell.bs.date)}
+                                        </Text>
+                                        <Text style={[
+                                            styles.cellAdDate,
+                                            { color: cell.inCurrentMonth ? colors.text + '50' : colors.text + '25' },
+                                            selectedCell && { color: '#FFFFFFB0' },
+                                        ]}>
+                                            {cell.adDay}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            );
+                        })}
                     </View>
                 </View>
 
-                {/* Note */}
+                {/* Selected Day Summary */}
+                <View style={[styles.selectedBar, { backgroundColor: colors.primary + '12' }]}>
+                    <Ionicons name="calendar" size={16} color={colors.primary} />
+                    <Text style={[styles.selectedBarText, { color: colors.primary }]}>
+                        {NEPALI_MONTHS[selected.month]} {toDevanagariDigits(selected.date)}, {toDevanagariDigits(selected.year)}
+                        {'  ·  '}
+                        {dayjs(bsToAdIsoString(selected)).format('dddd, MMMM D, YYYY')}
+                    </Text>
+                </View>
+
+                {loading ? (
+                    <View style={styles.loadingRow}>
+                        <ActivityIndicator size="small" color={colors.primary} />
+                    </View>
+                ) : (
+                    <>
+                        <View style={styles.statsGrid}>
+                            <StatItem icon="sunny" label="Sunrise" value={data?.sunrise || '—'} color="#F59E0B" isDark={isDark} />
+                            <StatItem icon="moon" label="Sunset" value={data?.sunset || '—'} color="#6366F1" isDark={isDark} />
+                        </View>
+
+                        <View style={[styles.section, styles.detailsCard, { backgroundColor: isDark ? '#1F2937' : '#FFF', borderColor: isDark ? '#374151' : '#F3F4F6' }]}>
+                            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 10 }]}>Celestial Details</Text>
+                            <DetailRow label="Tithi" value={data?.tithi || '—'} icon="moon" isDark={isDark} />
+                            <DetailRow label="Nakshatra" value={data?.nakshatra || '—'} icon="star" isDark={isDark} />
+                            <DetailRow label="Yoga" value={data?.yoga || '—'} icon="infinite" isDark={isDark} />
+                            <DetailRow label="Karana" value={data?.karana || '—'} icon="analytics" isDark={isDark} />
+                            <DetailRow label="Rashi" value={data?.rashi || '—'} icon="moon" isDark={isDark} />
+                        </View>
+
+                        <View style={styles.section}>
+                            <Text style={[styles.sectionTitle, { color: colors.text }]}>Auspicious Times</Text>
+                            <View style={[styles.auspiciousCard, { backgroundColor: isDark ? '#1F2937' : '#F0FDF4' }]}>
+                                <Ionicons name="time" size={20} color="#10B981" />
+                                <View style={{ flex: 1, marginLeft: 12 }}>
+                                    <Text style={[styles.auspiciousLabel, { color: isDark ? '#9CA3AF' : '#047857' }]}>Abhijit Muhurta</Text>
+                                    <Text style={[styles.auspiciousValue, { color: isDark ? '#FFF' : '#065F46' }]}>
+                                        {data?.auspicious_time || 'Check later for better timings'}
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+                    </>
+                )}
+
                 <View style={styles.noteBox}>
                     <Text style={styles.noteText}>
                         * These timings are approximate for Kathmandu, Nepal. Contact your Pandit for location-specific accuracy.
                     </Text>
                 </View>
             </ScrollView>
-
-            <Modal visible={showCalendarModal} animationType="fade" transparent onRequestClose={() => setShowCalendarModal(false)}>
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}> 
-                        <View style={styles.modalHeader}>
-                            <Text style={[styles.modalTitle, { color: colors.text }]}>Select Date</Text>
-                            <TouchableOpacity onPress={() => setShowCalendarModal(false)} style={styles.modalCloseBtn}>
-                                <Ionicons name="close" size={20} color={colors.text} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <Calendar
-                            current={selectedDate}
-                            onDayPress={(day: any) => {
-                                setSelectedDate(day.dateString);
-                                setShowCalendarModal(false);
-                            }}
-                            markedDates={{
-                                [selectedDate]: {
-                                    selected: true,
-                                    selectedColor: colors.primary,
-                                    selectedTextColor: '#FFF',
-                                },
-                                [dayjs().format('YYYY-MM-DD')]: {
-                                    marked: true,
-                                    dotColor: colors.primary,
-                                },
-                            }}
-                            hideExtraDays={false}
-                            theme={{
-                                backgroundColor: colors.card,
-                                calendarBackground: colors.card,
-                                textSectionTitleColor: '#D97706',
-                                selectedDayBackgroundColor: colors.primary,
-                                selectedDayTextColor: '#ffffff',
-                                todayTextColor: colors.primary,
-                                dayTextColor: colors.text,
-                                textDisabledColor: isDark ? '#5A5A5A' : '#D1D5DB',
-                                monthTextColor: colors.text,
-                                indicatorColor: colors.primary,
-                                arrowColor: '#06B6D4',
-                                textDayFontWeight: '600',
-                                textMonthFontWeight: '700',
-                                textDayHeaderFontWeight: '700',
-                            }}
-                        />
-                    </View>
-                </View>
-            </Modal>
         </SafeAreaView>
     );
+}
+
+/** Small helper so the month-nav subtitle can show the AD month range a BS month spans. */
+function addOneBsMonthAdLabel(year: number, month: number): string {
+    const next = addBsMonths(year, month, 1);
+    return bsToAdIsoString({ year: next.year, month: next.month, date: 1 });
 }
 
 const StatItem = ({ icon, label, value, color, isDark }: any) => (
@@ -206,7 +221,7 @@ const StatItem = ({ icon, label, value, color, isDark }: any) => (
             <Ionicons name={icon} size={26} color={color} />
         </View>
         <View style={{ alignItems: 'center' }}>
-            <Text style={styles.statLabel}>{label}</Text>
+            <Text style={[styles.statLabel, { color: isDark ? '#9CA3AF' : '#6B7280' }]}>{label}</Text>
             <Text style={[styles.statValue, { color: isDark ? '#FFF' : '#1F2937' }]}>{value}</Text>
         </View>
     </View>
@@ -218,27 +233,14 @@ const DetailRow = ({ label, value, icon, isDark }: any) => (
             <View style={[styles.miniIcon, { backgroundColor: isDark ? '#374151' : '#F9FAFB' }]}>
                 <Ionicons name={icon} size={14} color={isDark ? '#9CA3AF' : '#6B7280'} />
             </View>
-            <Text style={styles.detailLabel}>{label}</Text>
+            <Text style={[styles.detailLabel, { color: isDark ? '#9CA3AF' : '#6B7280' }]}>{label}</Text>
         </View>
         <Text style={[styles.detailValue, { color: isDark ? '#FFF' : '#333' }]}>{value}</Text>
     </View>
 );
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    centerContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    loadingText: {
-        marginTop: 16,
-        fontSize: 16,
-        fontWeight: '600',
-    },
+    container: { flex: 1 },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -246,106 +248,56 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        backgroundColor: '#FFF8E7',
     },
-    backButton: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        flex: 1,
-        textAlign: 'center',
-    },
-    calendarToggle: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    weekStripWrap: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-    },
-    weekDayItem: {
-        width: 44,
-        height: 54,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: 'transparent',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 2,
-    },
-    weekDayLabel: {
-        fontSize: 10,
-        fontWeight: '600',
-    },
-    weekDayValue: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    dateNavRows: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 20,
-        gap: 24,
-    },
-    todayBtn: {
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 20,
-        borderWidth: 1,
-    },
-    scrollContent: {
-        padding: 20,
-    },
-    dateCard: {
-        padding: 24,
+    backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+    headerTitle: { fontSize: 18, fontWeight: 'bold', flex: 1, textAlign: 'center' },
+    todayIconBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+    scrollContent: { padding: 16 },
+
+    calendarCard: {
         borderRadius: 24,
         borderWidth: 1,
-        alignItems: 'center',
-        marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        elevation: 2,
-    },
-    nepaliDateAccent: {
-        width: 32,
-        height: 4,
-        borderRadius: 10,
-        marginBottom: 12,
-    },
-    nepaliDate: {
-        fontSize: 36,
-        fontWeight: 'bold',
-        color: '#D97706',
-        marginBottom: 4,
-    },
-    englishDate: {
-        fontSize: 14,
-        opacity: 0.7,
+        padding: 12,
         marginBottom: 16,
     },
-    tithiBadge: {
-        backgroundColor: '#D97706',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 12,
+    monthNav: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 4,
+        paddingBottom: 12,
     },
-    tithiText: {
-        color: '#FFF',
-        fontWeight: 'bold',
-        fontSize: 16,
+    navArrow: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
+    monthTitleWrap: { alignItems: 'center' },
+    monthTitle: { fontSize: 17, fontWeight: '800' },
+    monthSubtitle: { fontSize: 11, fontWeight: '600', marginTop: 1 },
+    weekdayRow: { flexDirection: 'row' },
+    weekdayLabel: { textAlign: 'center', fontSize: 11, fontWeight: '700', paddingBottom: 8 },
+    grid: { flexDirection: 'row', flexWrap: 'wrap' },
+    cell: { justifyContent: 'center', alignItems: 'center', paddingVertical: 3 },
+    cellInner: {
+        width: '86%',
+        height: '86%',
+        borderRadius: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
+    cellDate: { fontSize: 15, fontWeight: '700' },
+    cellAdDate: { fontSize: 9, fontWeight: '600', marginTop: 1 },
+
+    selectedBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        borderRadius: 14,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        marginBottom: 20,
+    },
+    selectedBarText: { fontSize: 12, fontWeight: '800', flexShrink: 1 },
+
+    loadingRow: { height: 120, justifyContent: 'center', alignItems: 'center' },
+
     statsGrid: {
         flexDirection: 'row',
         gap: 16,
@@ -368,7 +320,6 @@ const styles = StyleSheet.create({
     },
     statLabel: {
         fontSize: 12,
-        color: '#6B7280',
         marginBottom: 4,
     },
     statValue: {
@@ -410,7 +361,6 @@ const styles = StyleSheet.create({
     detailLabel: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#6B7280',
     },
     detailValue: {
         fontSize: 15,
@@ -432,7 +382,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     noteBox: {
-        marginTop: 20,
+        marginTop: 4,
         padding: 16,
     },
     noteText: {
@@ -441,36 +391,5 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontStyle: 'italic',
         lineHeight: 18,
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.45)',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    modalCard: {
-        borderRadius: 20,
-        borderWidth: 1,
-        paddingTop: 12,
-        paddingBottom: 8,
-        overflow: 'hidden',
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingBottom: 6,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: '800',
-    },
-    modalCloseBtn: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
     },
 });

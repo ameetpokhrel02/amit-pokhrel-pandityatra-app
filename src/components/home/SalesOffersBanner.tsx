@@ -11,6 +11,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.82;
 const CARD_HEIGHT = 160;
 
+const formatTime = (num: number) => String(num).padStart(2, '0');
 interface TimeLeft {
   hours: number;
   minutes: number;
@@ -62,7 +63,6 @@ export const SalesOffersBanner = ({ banners }: { banners?: Banner[] }) => {
 
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ hours: 6, minutes: 15, seconds: 40 });
 
-  console.log('SalesOffersBanner rendered with banners:', banners);
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {

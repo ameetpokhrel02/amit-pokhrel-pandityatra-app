@@ -107,19 +107,11 @@ export default function PreferencesScreen() {
             )}
             
             {renderPreferenceItem(
-              "wallet-outline", 
-              "Budget Friendly", 
+              "wallet-outline",
+              "Budget Friendly",
               "Prioritize affordable Samagri options in recommendations.",
               preferences.budget_friendly,
               () => handleToggle('budget_friendly')
-            )}
-
-            {renderPreferenceItem(
-              "notifications-outline", 
-              "Smart Reminders", 
-              "Get alerts for upcoming festivals and ritual requirements.",
-              preferences.notifications_enabled !== false,
-              () => {} // Mock for now
             )}
           </View>
 

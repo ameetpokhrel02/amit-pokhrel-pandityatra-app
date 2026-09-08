@@ -17,7 +17,7 @@ export async function generateKundali(payload: Record<string, any>) {
 }
 
 export async function getSavedKundalis() {
-    const response = await apiClient.get('kundali/');
+    const response = await apiClient.get('kundali/list/');
     return response.data.results ?? response.data;
 }
 

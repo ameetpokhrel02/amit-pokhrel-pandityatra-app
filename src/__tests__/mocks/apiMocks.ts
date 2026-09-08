@@ -50,7 +50,7 @@ const applyMocks = (mock: MockAdapter) => {
 
   // Kundali endpoints
   mock.onPost(/kundali\/generate/).reply(201, mockData.mockKundaliResult);
-  mock.onGet(/kundali\/?$/).reply(200, [mockData.mockKundaliResult]);
+  mock.onGet(/kundali\/list\/?$/).reply(200, [mockData.mockKundaliResult]);
   mock.onGet(/kundali\/\d+\//).reply(200, mockData.mockKundaliResult);
   mock.onPost(/kundali\/\d+\/export-pdf/).reply(200, { pdf_url: mockData.mockKundaliResult.pdf_url });
 

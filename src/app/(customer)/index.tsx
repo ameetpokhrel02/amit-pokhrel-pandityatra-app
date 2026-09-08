@@ -30,6 +30,8 @@ import { getImageUrl } from '@/utils/image';
 import { DailyPanchang } from '@/components/home/DailyPanchang';
 import { FlashSale } from '@/components/home/FlashSale';
 import { SalesOffersBanner } from '@/components/home/SalesOffersBanner';
+import { PaymentTrustBanner } from '@/components/home/PaymentTrustBanner';
+import { AlignYourStars } from '@/components/home/AlignYourStars';
 import { UpcomingSessionBanner } from '@/components/booking/UpcomingSessionBanner';
 import { useDashboardData } from '@/hooks/customer/useDashboardData';
 import { SamagriItem } from '@/services/api';
@@ -39,21 +41,21 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNERS = [
   {
     id: 1,
-    image: require('@/assets/images/hero_2.png'),
+    image: require('@/assets/images/hero_2.jpg'),
     title: 'Divine Shanti',
     subtitle: 'Spiritual Essentials & Holistic Goods',
     link: undefined as string | undefined
   },
   {
     id: 2,
-    image: require('@/assets/images/oils_products.png'),
+    image: require('@/assets/images/oils_products.jpg'),
     title: 'Authentic Oils',
     subtitle: 'Pure & Energized Spiritual Oils',
     link: undefined as string | undefined
   },
   {
     id: 3,
-    image: require('@/assets/images/hero_3.png'),
+    image: require('@/assets/images/hero_3.jpg'),
     title: 'Sacred Rituals',
     subtitle: 'Complete Samagri for Every Occasion',
     link: undefined as string | undefined
@@ -141,12 +143,14 @@ export default function CustomerHomeScreen() {
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<any>(null);
   const currentIndexRef = useRef(0);
+  const [activeBannerIndex, setActiveBannerIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
       const count = dynamicBanners.length;
       if (count <= 1) return;
       currentIndexRef.current = (currentIndexRef.current + 1) % count;
+      setActiveBannerIndex(currentIndexRef.current);
       flatListRef.current?.scrollToIndex({ index: currentIndexRef.current, animated: true });
     }, 4000);
     return () => clearInterval(interval);
@@ -222,7 +226,7 @@ export default function CustomerHomeScreen() {
         {bookings.length > 0 && <UpcomingSessionBanner booking={bookings[0]} role="customer" />}
 
         {/* Banner Carousel */}
-        <View style={{ height: 200, marginBottom: 12, marginTop: 8 }}>
+        <View style={{ height: 132, marginBottom: 6, marginTop: 8 }}>
           <FlatList
             ref={flatListRef}
             data={dynamicBanners}
@@ -245,9 +249,10 @@ export default function CustomerHomeScreen() {
             }}
             onMomentumScrollEnd={(event) => {
               currentIndexRef.current = Math.floor(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+              setActiveBannerIndex(currentIndexRef.current);
             }}
             renderItem={({ item }) => (
-              <View style={{ width: SCREEN_WIDTH, paddingHorizontal: 20, height: 200 }}>
+              <View style={{ width: SCREEN_WIDTH, paddingHorizontal: 24, height: 132 }}>
                 <TouchableOpacity
                     activeOpacity={0.9}
                     style={[styles.bannerWrapper, { backgroundColor: colors.card }]}
@@ -259,11 +264,8 @@ export default function CustomerHomeScreen() {
                     contentFit="cover"
                   />
                   <View style={styles.bannerOverlay}>
-                    <Text style={styles.bannerTitle}>{item.title}</Text>
-                    <Text style={styles.bannerSubtitle}>{item.subtitle}</Text>
-                    <View style={[styles.bannerBtn, { backgroundColor: colors.surface }]}>
-                      <Text style={[styles.bannerBtnText, { color: colors.primary }]}>Explore Now</Text>
-                    </View>
+                    <Text style={styles.bannerTitle} numberOfLines={1}>{item.title}</Text>
+                    <Text style={styles.bannerSubtitle} numberOfLines={1}>{item.subtitle}</Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -271,6 +273,21 @@ export default function CustomerHomeScreen() {
             keyExtractor={item => item.id.toString()}
           />
         </View>
+        <View style={styles.bannerDots}>
+          {dynamicBanners.map((b, i) => (
+            <View
+              key={b.id}
+              style={[
+                styles.bannerDot,
+                { backgroundColor: i === activeBannerIndex ? colors.primary : colors.border },
+                i === activeBannerIndex && styles.bannerDotActive,
+              ]}
+            />
+          ))}
+        </View>
+
+        {/* Trusted Payments */}
+        <PaymentTrustBanner />
 
         {/* Quick Utilities */}
         <View style={styles.sectionWrap}>
@@ -297,6 +314,9 @@ export default function CustomerHomeScreen() {
             />
           </View>
         </View>
+
+        {/* Align Your Stars (Kundali) */}
+        <AlignYourStars onPress={() => handleAuthAction('/(customer)/kundali')} />
 
         {/* Flash Sale */}
         <FlashSale banners={apiBanners} />
@@ -520,12 +540,17 @@ const styles = StyleSheet.create({
   headerActionBtn: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
   badge: { position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 9, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 2 },
   badgeText: { color: '#FFF', fontSize: 9, fontWeight: '900' },
-  bannerWrapper: { width: '100%', height: '100%', borderRadius: 24, overflow: 'hidden' },
-  bannerOverlay: { position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.3)', padding: 24, justifyContent: 'center' },
-  bannerTitle: { color: '#FFF', fontSize: 22, fontWeight: '900' },
-  bannerSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 11, marginBottom: 16 },
-  bannerBtn: { alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12 },
-  bannerBtnText: { fontWeight: '900', fontSize: 11 },
+  bannerWrapper: { width: '100%', height: '100%', borderRadius: 18, overflow: 'hidden' },
+  bannerOverlay: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    paddingHorizontal: 16, paddingVertical: 12,
+    backgroundColor: 'rgba(0,0,0,0.28)',
+  },
+  bannerTitle: { color: '#FFF', fontSize: 15, fontWeight: '800' },
+  bannerSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: 11, marginTop: 1 },
+  bannerDots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 4 },
+  bannerDot: { width: 6, height: 6, borderRadius: 3 },
+  bannerDotActive: { width: 16 },
   utilityRowScroller: { paddingRight: 24, gap: 12 },
   utilityItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 20, gap: 10, borderWidth: 1 },
   utilityIconWrap: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },

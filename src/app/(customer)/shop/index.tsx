@@ -28,19 +28,19 @@ const { width } = Dimensions.get('window');
 const BANNERS = [
   { 
     id: 1, 
-    image: require('@/assets/images/hero_2.png'), 
+    image: require('@/assets/images/hero_2.jpg'), 
     title: 'Divine Shanti', 
     subtitle: 'Spiritual Essentials & Holistic Goods' 
   },
   { 
     id: 2, 
-    image: require('@/assets/images/oils_products.png'), 
+    image: require('@/assets/images/oils_products.jpg'), 
     title: 'Authentic Oils', 
     subtitle: 'Pure & Energized Spiritual Oils' 
   },
   { 
     id: 3, 
-    image: require('@/assets/images/hero_3.png'), 
+    image: require('@/assets/images/hero_3.jpg'), 
     title: 'Sacred Rituals', 
     subtitle: 'Complete Samagri for Every Occasion' 
   }

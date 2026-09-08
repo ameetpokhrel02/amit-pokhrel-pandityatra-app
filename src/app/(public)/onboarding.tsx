@@ -28,7 +28,7 @@ const SLIDES = [
         id: '3',
         title: 'AI Kundali & Guide',
         description: 'Unlock cosmic insights with our AI Kundali generator and personalized spiritual guidance.',
-        image: require('@/assets/images/spash 4.png'), // Keeping original if spash 4.png exists
+        image: require('@/assets/images/spash4.jpg'),
         icon: 'sparkles-outline',
     },
 ];

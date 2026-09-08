@@ -1,32 +1,65 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-
-interface Review {
-  id: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  date: string;
-}
-
-const MOCK_REVIEWS: Review[] = [
-  { id: '1', userName: 'Ameet Pokhrel', rating: 5, comment: 'Excellent puja performance. Explained everything very well.', date: '2026-03-12' },
-  { id: '2', userName: 'Sunita Thapa', rating: 4, comment: 'Very punctual and professional.', date: '2026-03-08' },
-];
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import dayjs from 'dayjs';
+import { useAuthStore } from '@/store/auth.store';
+import { fetchPanditReviews, Review } from '@/services/review.service';
 
 export default function PanditReviewsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { user } = useAuthStore();
+  const panditId = user?.pandit_profile?.id;
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!panditId) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const data = await fetchPanditReviews(panditId);
+      setReviews(data.reviews);
+      setAverageRating(data.average_rating);
+      setTotalReviews(data.total_reviews);
+    } catch (error) {
+      console.error('Failed to load reviews', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [panditId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    load();
+  };
+
+  const positivePct = totalReviews > 0
+    ? Math.round((reviews.filter(r => r.rating >= 4).length / reviews.length) * 100)
+    : 0;
 
   const renderItem = ({ item }: { item: Review }) => (
     <View style={styles.reviewCard}>
       <View style={styles.reviewHeader}>
         <View style={styles.userRow}>
-          <View style={styles.avatarPlaceholder}><Text style={styles.initials}>{item.userName.charAt(0)}</Text></View>
+          <View style={styles.avatarPlaceholder}><Text style={styles.initials}>{item.customer_name.charAt(0)}</Text></View>
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>{item.userName}</Text>
-            <Text style={styles.date}>{item.date}</Text>
+            <Text style={styles.userName}>{item.customer_name}</Text>
+            <Text style={styles.date}>{dayjs(item.created_at).format('MMM D, YYYY')}</Text>
           </View>
         </View>
         <View style={styles.ratingBadge}>
@@ -40,7 +73,7 @@ export default function PanditReviewsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#f97316" />
         </TouchableOpacity>
@@ -49,33 +82,38 @@ export default function PanditReviewsScreen() {
 
       <View style={styles.statsBar}>
         <View style={styles.statItem}>
-          <Text style={styles.statVal}>4.8</Text>
+          <Text style={styles.statVal}>{averageRating.toFixed(1)}</Text>
           <Text style={styles.statLbl}>Rating</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statVal}>124</Text>
+          <Text style={styles.statVal}>{totalReviews}</Text>
           <Text style={styles.statLbl}>Total</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statVal}>98%</Text>
+          <Text style={styles.statVal}>{positivePct}%</Text>
           <Text style={styles.statLbl}>Positive</Text>
         </View>
       </View>
 
-      <FlatList
-        data={MOCK_REVIEWS}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="star-outline" size={60} color="#ccc" />
-            <Text style={styles.emptyText}>No reviews received yet</Text>
-          </View>
-        }
-      />
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: 40 }} color="#f97316" />
+      ) : (
+        <FlatList
+          data={reviews}
+          renderItem={renderItem}
+          keyExtractor={item => String(item.id)}
+          contentContainerStyle={styles.listContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#f97316']} />}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="star-outline" size={60} color="#ccc" />
+              <Text style={styles.emptyText}>No reviews received yet</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
@@ -86,7 +124,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     alignItems: 'center', 
     paddingHorizontal: 20,
-    paddingTop: 50,
     paddingBottom: 20,
     backgroundColor: '#fff'
   },

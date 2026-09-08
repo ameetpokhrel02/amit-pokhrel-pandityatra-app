@@ -10,7 +10,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/store/auth.store';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -18,7 +17,6 @@ const RECENT_ROLE_KEY = 'recent_selected_role';
 
 export default function RoleSelectionScreen() {
   const router = useRouter();
-  const { continueAsGuest } = useAuthStore();
   const [recentRole, setRecentRole] = React.useState<'user' | 'pandit' | 'vendor' | null>(null);
 
   React.useEffect(() => {
@@ -43,11 +41,6 @@ export default function RoleSelectionScreen() {
     } catch {
       // Ignore storage write failures to avoid blocking navigation.
     }
-  };
-
-  const handleGuestMode = async () => {
-    await continueAsGuest();
-    router.replace('/(customer)');
   };
 
   const selectRole = (role: 'user' | 'pandit' | 'vendor') => {
@@ -167,14 +160,6 @@ export default function RoleSelectionScreen() {
               isRecent={recentRole === role.id}
             />
           ))}
-
-          <RoleCard 
-            title="Explore as Guest"
-            description="Browse services without an account"
-            icon="compass-outline"
-            color="#6B7280"
-            onPress={handleGuestMode}
-          />
         </View>
 
         <View style={styles.footer}>

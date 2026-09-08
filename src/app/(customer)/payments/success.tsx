@@ -10,7 +10,15 @@ import { LazyLoader } from '@/components/ui/LazyLoader';
 
 export default function PaymentSuccessScreen() {
   const router = useRouter();
-  const { bookingId, method, amount } = useLocalSearchParams<{ bookingId: string, method?: string, amount?: string }>();
+  const { bookingId, method, amount, serviceLocation, panditName, serviceName } = useLocalSearchParams<{
+    bookingId: string,
+    method?: string,
+    amount?: string,
+    serviceLocation?: string,
+    panditName?: string,
+    serviceName?: string,
+  }>();
+  const isOnline = serviceLocation === 'ONLINE';
   const { colors, theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -89,12 +97,38 @@ export default function PaymentSuccessScreen() {
         </View>
 
         <View style={styles.footer}>
+          {isOnline && (
+            <TouchableOpacity
+              style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+              onPress={() => router.push({
+                pathname: '/video',
+                params: {
+                  bookingId,
+                  role: 'customer',
+                  peerName: panditName,
+                  serviceName,
+                },
+              } as any)}
+            >
+              <Ionicons name="videocam" size={20} color="#FFF" style={{ marginRight: 8 }} />
+              <Text style={styles.buttonText}>Join Video Call</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+            style={isOnline
+              ? [styles.secondaryButton, { borderColor: colors.primary }]
+              : [styles.primaryButton, { backgroundColor: colors.primary }]}
             onPress={() => router.replace('/(customer)/bookings')}
           >
-            <Text style={styles.buttonText}>My Bookings</Text>
-            <Ionicons name="arrow-forward" size={20} color="#FFF" style={{ marginLeft: 8 }} />
+            {isOnline ? (
+              <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>My Bookings</Text>
+            ) : (
+              <>
+                <Text style={styles.buttonText}>My Bookings</Text>
+                <Ionicons name="arrow-forward" size={20} color="#FFF" style={{ marginLeft: 8 }} />
+              </>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity

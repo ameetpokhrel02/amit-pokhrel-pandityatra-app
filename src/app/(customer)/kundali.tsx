@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
     View, 
     Text, 
@@ -13,9 +13,9 @@ import {
     StatusBar
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@/store/ThemeContext';
-import { generateKundali } from '@/services/kundali.service';
+import { generateKundali, getSavedKundalis } from '@/services/kundali.service';
 import { calculateLocalKundali } from '@/services/local-kundali.service';
 import { Image } from 'expo-image';
 import { LazyLoader } from '@/components/ui/LazyLoader';
@@ -32,10 +32,11 @@ const { width, height } = Dimensions.get('window');
 
 export default function KundaliScreen() {
     const router = useRouter();
+    const { id: savedId } = useLocalSearchParams<{ id?: string }>();
     const { colors, theme } = useTheme();
     const isDark = theme === 'dark';
     const chartRef = useRef<View>(null);
-    
+
     const [formData, setFormData] = useState({
         name: '',
         dob: '',
@@ -49,6 +50,52 @@ export default function KundaliScreen() {
     const [birthLat, setBirthLat] = useState(27.7172);
     const [birthLon, setBirthLon] = useState(85.3240);
     const [offlineMode, setOfflineMode] = useState(false);
+
+    useEffect(() => {
+        if (!savedId) return;
+        (async () => {
+            try {
+                setLoading(true);
+                const history = await getSavedKundalis();
+                const saved = (history || []).find((k: any) => String(k.id) === String(savedId));
+                if (saved) {
+                    setFormData({
+                        name: saved.name || '',
+                        dob: saved.date_of_birth || saved.birth_date || '',
+                        tob: (saved.time_of_birth || saved.birth_time || '').slice(0, 5),
+                        place: saved.place_of_birth || saved.birth_place || '',
+                        gender: 'male',
+                    });
+                    // Only show the chart itself if the saved record actually carries chart data.
+                    if (saved.planets || saved.houses || saved.ascendant) {
+                        setResult(saved);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load saved kundali', e);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, [savedId]);
+
+    const handleAskAI = () => {
+        if (!result) return;
+        const summary = [
+            formData.name && `Name: ${formData.name}`,
+            result.ascendant && `Lagna/Ascendant: ${result.ascendant}`,
+            result.rashi && `Rashi: ${result.rashi}`,
+            result.nakshatra && `Nakshatra: ${result.nakshatra}`,
+        ].filter(Boolean).join(', ');
+
+        router.push({
+            pathname: '/(customer)/ai-assistant',
+            params: {
+                initialQuestion: `Here is my Kundali summary — ${summary}. Can you explain what this means for me and what I should be mindful of?`,
+                contextLabel: 'Kundali reading',
+            },
+        } as any);
+    };
 
     const handleGenerate = async () => {
         if (!formData.dob || !formData.tob || !formData.place) {
@@ -295,6 +342,15 @@ export default function KundaliScreen() {
                             </View>
                         </View>
 
+                        <TouchableOpacity
+                            style={[styles.askAiBtn, { backgroundColor: colors.primary + '12', borderColor: colors.primary + '40' }]}
+                            onPress={handleAskAI}
+                        >
+                            <MaterialCommunityIcons name="auto-fix" size={18} color={colors.primary} />
+                            <Text style={[styles.askAiBtnText, { color: colors.primary }]}>Ask AI about this Kundali</Text>
+                            <Ionicons name="arrow-forward" size={16} color={colors.primary} />
+                        </TouchableOpacity>
+
                         <View ref={chartRef} collapsable={false} style={[styles.chartWrapper, { backgroundColor: colors.card, borderColor: colors.border }]}>
                             <KundaliChart 
                                 planets={Array.isArray(result.planets) ? result.planets.map((p: any) => ({
@@ -408,6 +464,8 @@ const styles = StyleSheet.create({
     generateBtnText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
     resultSection: { paddingHorizontal: 20, marginTop: 32 },
     resultHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+    askAiBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 46, borderRadius: 14, borderWidth: 1, marginBottom: 16 },
+    askAiBtnText: { fontSize: 13, fontWeight: '700' },
     sectionTitle: { fontSize: 20, fontWeight: 'bold' },
     downloadIconBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(249,115,22,0.1)', alignItems: 'center', justifyContent: 'center' },
     chartWrapper: { borderRadius: 32, padding: 20, borderWidth: 1, alignItems: 'center' },

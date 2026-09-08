@@ -14,8 +14,9 @@ export const trackEvent = async (event: string, properties: Record<string, any> 
       platform: 'mobile',
     };
 
-    // Logging for debug
-    console.log(`[Analytics] ${event}`, properties);
+    if (__DEV__) {
+      console.log(`[Analytics] ${event}`, properties);
+    }
 
     // Forward to backend analytics endpoint
     await apiClient.post('analytics/track/', payload).catch((err) => {

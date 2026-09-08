@@ -145,15 +145,6 @@ export default function CartScreen() {
             <Text style={[styles.totalValText, { color: colors.primary }]}>NPR {total}</Text>
           </View>
         </View>
-
-        {/* Promo Code Mock */}
-        <View style={[styles.promoBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.promoLeft}>
-            <Ionicons name="pricetag-outline" size={20} color={colors.primary} />
-            <Text style={[styles.promoText, { color: colors.text }]}>Apply Promo Code</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.text + '40'} />
-        </View>
       </ScrollView>
 
       <View style={[
@@ -248,17 +239,6 @@ const styles = StyleSheet.create({
   totalLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   totalLabel: { fontSize: 16, fontWeight: 'bold' },
   totalValText: { fontSize: 20, fontWeight: 'bold' },
-  promoBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 100,
-  },
-  promoLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  promoText: { fontWeight: '500' },
   footer: {
     padding: 20,
     borderTopWidth: 1,

@@ -90,12 +90,16 @@ export const saveTokens = async (access: string, refresh: string, userData?: any
 // --- LOGGING INTERCEPTORS ---
 
 apiClient.interceptors.request.use(config => {
-    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.params ? `Params: ${JSON.stringify(config.params)}` : '', config.data ? `Data: ${JSON.stringify(config.data)}` : '');
+    if (__DEV__) {
+        console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.params ? `Params: ${JSON.stringify(config.params)}` : '', config.data ? `Data: ${JSON.stringify(config.data)}` : '');
+    }
     return config;
 }, error => Promise.reject(error));
 
 publicApi.interceptors.request.use(config => {
-    console.log(`[Public API Request] ${config.method?.toUpperCase()} ${config.url}`, config.params ? `Params: ${JSON.stringify(config.params)}` : '', config.data ? `Data: ${JSON.stringify(config.data)}` : '');
+    if (__DEV__) {
+        console.log(`[Public API Request] ${config.method?.toUpperCase()} ${config.url}`, config.params ? `Params: ${JSON.stringify(config.params)}` : '', config.data ? `Data: ${JSON.stringify(config.data)}` : '');
+    }
     return config;
 }, error => Promise.reject(error));
 
